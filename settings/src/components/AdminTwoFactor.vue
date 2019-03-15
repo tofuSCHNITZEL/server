@@ -12,49 +12,51 @@
 				   id="two-factor-enforced"
 				   class="checkbox"
 				   v-model="state.enforced"
-				   v-on:change="saveChanges">
+				   v-on:change="$store.commit('setEnforced', state.enforced)">
 			<label for="two-factor-enforced">{{ t('settings', 'Enforce two-factor authentication') }}</label>
 		</p>
-		<h3>{{ t('settings', 'Limit to groups') }}</h3>
-		{{ t('settings', 'Enforcement of two-factor authentication can be set for certain groups only.') }}
-		<p>
-			{{ t('settings', 'Two-factor authentication is enforced for all	members of the following groups.') }}
-		</p>
-		<p>
-			<Multiselect v-model="state.enforcedGroups"
-						 :options="groups"
-						 :placeholder="t('settings', 'Enforced groups')"
-						 :disabled="loading"
-						 :multiple="true"
-						 :searchable="true"
-						 @search-change="searchGroup"
-						 :loading="loadingGroups"
-						 :show-no-options="false"
-						 :close-on-select="false">
-			</Multiselect>
-		</p>
-		<p>
-			{{ t('settings', 'Two-factor authentication is not enforced for	members of the following groups.') }}
-		</p>
-		<p>
-			<Multiselect v-model="state.excludedGroups"
-						 :options="groups"
-						 :placeholder="t('settings', 'Excluded groups')"
-						 :disabled="loading"
-						 :multiple="true"
-						 :searchable="true"
-						 @search-change="searchGroup"
-						 :loading="loadingGroups"
-						 :show-no-options="false"
-						 :close-on-select="false">
-			</Multiselect>
-		</p>
-		<p>
-			<em>
-				<!-- this text is also found in the documentation. update it there as well if it ever changes -->
-				{{ t('settings', 'When groups are selected/excluded, they use the following logic to determine if a user has 2FA enforced: If no groups are selected, 2FA is enabled for everyone except members of the excluded groups. If groups are selected, 2FA is enabled for all members of these. If a user is both in a selected and excluded group, the selected takes precedence and 2FA is enforced.') }}
-			</em>
-		</p>
+		<template v-if="state.enforced">
+			<h3>{{ t('settings', 'Limit to groups') }}</h3>
+			{{ t('settings', 'Enforcement of two-factor authentication can be set for certain groups only.') }}
+			<p>
+				{{ t('settings', 'Two-factor authentication is enforced for all	members of the following groups.') }}
+			</p>
+			<p>
+				<Multiselect v-model="state.enforcedGroups"
+							 :options="groups"
+							 :placeholder="t('settings', 'Enforced groups')"
+							 :disabled="loading"
+							 :multiple="true"
+							 :searchable="true"
+							 @search-change="searchGroup"
+							 :loading="loadingGroups"
+							 :show-no-options="false"
+							 :close-on-select="false">
+				</Multiselect>
+			</p>
+			<p>
+				{{ t('settings', 'Two-factor authentication is not enforced for	members of the following groups.') }}
+			</p>
+			<p>
+				<Multiselect v-model="state.excludedGroups"
+							 :options="groups"
+							 :placeholder="t('settings', 'Excluded groups')"
+							 :disabled="loading"
+							 :multiple="true"
+							 :searchable="true"
+							 @search-change="searchGroup"
+							 :loading="loadingGroups"
+							 :show-no-options="false"
+							 :close-on-select="false">
+				</Multiselect>
+			</p>
+			<p>
+				<em>
+					<!-- this text is also found in the documentation. update it there as well if it ever changes -->
+					{{ t('settings', 'When groups are selected/excluded, they use the following logic to determine if a user has 2FA enforced: If no groups are selected, 2FA is enabled for everyone except members of the excluded groups. If groups are selected, 2FA is enabled for all members of these. If a user is both in a selected and excluded group, the selected takes precedence and 2FA is enforced.') }}
+				</em>
+			</p>
+		</template>
 		<p>
 			<button class="button primary"
 					v-on:click="saveChanges"
