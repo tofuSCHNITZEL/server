@@ -41,12 +41,12 @@ OC.L10N.register(
     "A calendar <strong>event</strong> was modified" : "Egutegiaren <strong>gertaera</strong> bat aldatu da",
     "A calendar <strong>todo</strong> was modified" : "Egutegiaren zeregin bat aldatu da",
     "Contact birthdays" : "Urtebetetze kontaktua",
+    "Where:" : "Non:",
+    "Description:" : "Deskribapena:",
     "Invitation canceled" : "Gonbidapena ezeztatua",
     "Hello %s," : "Kaixo 1%s,",
     "Invitation updated" : "Gonbidapena eguneratu da",
     "When:" : "Noiz:",
-    "Where:" : "Non:",
-    "Description:" : "Deskribapena:",
     "Link:" : "Esteka:",
     "Accept" : "Onartu",
     "More options …" : "Aukera gehiago …",
@@ -57,8 +57,6 @@ OC.L10N.register(
     "Request ID: %s" : "Eskatutako ID: 1%s",
     "Save" : "Gorde",
     "Send invitations to attendees" : "Gonbidatutakoei gonbidapenak bidali",
-    "The meeting »%s« with %s was canceled." : "1%s-rekin duzun » 1%s « bilera ezeztatu da",
-    "%s invited you to »%s«" : "1%s-k »1%s«-ra gonbidatu zaitu",
     "Please make sure to properly set up the email settings above." : "Mesedez, eposta ezarpenak ondo zehaztuta daudela ziurta ezazu"
 },
 "nplurals=2; plural=(n != 1);");

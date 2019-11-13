@@ -35,6 +35,8 @@ OC.L10N.register(
     "Could not connect to the appstore or the appstore returned no updates at all. Search manually for updates or make sure your server has access to the internet and can connect to the appstore." : "Ne eblis konektiĝi al aplikaĵejo, aŭ la aplikaĵejo sendis neniun ĝisdatigojn. Serĉu permane pri ĝisdatigoj, aŭ certigu, ke via servilo povas aliri al la interreto kaj povas konektiĝi al la aplikaĵejo.",
     "<strong>All</strong> apps have an update for this version available" : "<strong>Ĉiuj</strong> aplikaĵoj havas ĝisdatigon por tiu ĉi versio",
     "View changelog" : "Vidi ŝanĝoprotokolon",
+    "Enterprise" : "Firmao",
+    "For enterprise use. Provides always the latest patch level, but will not update to the next major release immediately. That update happens once Nextcloud GmbH has done additional hardening and testing for large-scale and mission-critical deployments. This channel is only available to customers and provides the Nextcloud Enterprise package." : "Por firmaa uzo. Ĝi uzas ĉiam la plej freŝan flikaĵon, sed ĝi ne tuj ĝisdatiĝos al la sekva ĉefversio. Transiro al la sekva ĉefversio okazos, kiam  Nextcloud GmbH faros plifortigaĵojn kaj pliajn testojn rilate al uzo en granda kaj grava kunteksto. Ĝi nur disponeblas por klientoj kaj ĝi estas la Nextcloud-a firmapakaĵo.",
     "Stable" : "Stabila",
     "The most recent stable version. It is suited for regular use and will always update to the latest major version." : "La plej freŝa stabila versio. Ĝi taŭgas por ĉiutaga uzo, kaj ĝi ĝisdatiĝos ĉiufoje al la lasta ĉefversio.",
     "Beta" : "Beta",
@@ -44,7 +46,6 @@ OC.L10N.register(
     "<strong>production</strong> will always provide the latest patch level, but not update to the next major release immediately. That update usually happens with the second minor release (x.0.2)." : "<strong>Produktado</strong> uzas ĉiam la plej freŝan flikaĵon, sed ĝi ne tuj ĝisdatiĝos al la sekva ĉefversio. Transiro al la sekva ĉefversio okazos laŭ la dua neĉefa eldono (x.0.2).",
     "<strong>stable</strong> is the most recent stable version. It is suited for regular use and will always update to the latest major version." : "<strong>Stabila</strong> estas la plej freŝa stabila versio. Ĝi taŭgas por ĉiutaga uzo, kaj ĝi ĝisdatiĝos ĉiufoje al la lasta ĉefversio.",
     "<strong>beta</strong> is a pre-release version only for testing new features, not for production environments." : "<strong>Beta</strong> estas antaŭeldona versio nur por testi novajn trajtojn; ĝi ne taŭgas por produktada medio.",
-    "Could not start updater, please try the manual update" : "Ne eblis ruli la ĝisdatigilon, bv. provi mane ĝisdatigi.",
     "Production" : "Produktado",
     "Will always provide the latest patch level, but not update to the next major release immediately. That update usually happens with the second minor release (x.0.2) and only if the instance is already on the latest minor version." : "Ĝi uzas ĉiam la plej freŝan flikaĵon, sed ĝi ne tuj ĝisdatiĝos al la sekva ĉefversio. Transiro al la sekva ĉefversio okazos laŭ la dua neĉefa eldono (x.0.2), kaj nur se tiu servilo jam uzas la lastan neĉefan version."
 },

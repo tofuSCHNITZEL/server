@@ -37,7 +37,7 @@ OC.L10N.register(
     "View changelog" : "変更履歴を確認する",
     "Enterprise" : "エンタープライズ",
     "For enterprise use. Provides always the latest patch level, but will not update to the next major release immediately. That update happens once Nextcloud GmbH has done additional hardening and testing for large-scale and mission-critical deployments. This channel is only available to customers and provides the Nextcloud Enterprise package." : "企業用です。 常に最新のパッチレベルを提供しますが、すぐに次のメジャーリリースにアップデートはしません。このアップデートはNextcloud GmbHが大規模でミッションクリティカルな開発のための追加の強化とテストを行った後に行われます。 このチャンネルは顧客だけが利用でき、Nextcloud Enterpriseパッケージを提供します。",
-    "Stable" : "安定",
+    "Stable" : "安定版",
     "The most recent stable version. It is suited for regular use and will always update to the latest major version." : "最新の安定版です。 通常の使用に適しており、常に最新のメジャーバージョンにアップデートされます。",
     "Beta" : "ベータ",
     "A pre-release version only for testing new features, not for production environments." : "本番環境ではなく、新機能のテスト専用のプレリリース版です。",
@@ -46,7 +46,6 @@ OC.L10N.register(
     "<strong>production</strong> will always provide the latest patch level, but not update to the next major release immediately. That update usually happens with the second minor release (x.0.2)." : "<strong>production</strong>は常に最新のパッチレベルを提供しますが、すぐに次のメジャーリリースに更新されるわけではありません。アップデートは通常2番目のマイナーリリース（x.0.2）で起こります。",
     "<strong>stable</strong> is the most recent stable version. It is suited for regular use and will always update to the latest major version." : "<strong>stable</strong>は最新の安定版です。 通常の使用に適しており、常に最新のメジャーバージョンにアップデートされます。",
     "<strong>beta</strong> is a pre-release version only for testing new features, not for production environments." : "<strong>beta</strong>は新機能をテストするためのプレリリース版であり、本番環境用ではありません。",
-    "Could not start updater, please try the manual update" : "アップデータを起動できませんでした。手動アップデートをお試しください",
     "Production" : "プロダクション",
     "Will always provide the latest patch level, but not update to the next major release immediately. That update usually happens with the second minor release (x.0.2) and only if the instance is already on the latest minor version." : "常に最新のパッチレベルを提供しますが、すぐに次のメジャーリリースに更新するわけではありません。 アップデートは通常、2番目のマイナーリリース（x.0.2）で発生し、インスタンスがすでに最新のマイナーバージョンにある場合にのみ発生します。"
 },
