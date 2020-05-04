@@ -21,7 +21,9 @@
   -->
 
 <template>
-	<AppSidebarTab :icon="icon"
+	<AppSidebarTab
+		:id="id"
+		:icon="icon"
 		:name="name"
 		:active-tab="activeTab" />
 </template>
@@ -31,30 +33,29 @@ import AppSidebarTab from 'nextcloud-vue/dist/Components/AppSidebarTab'
 export default {
 	name: 'LegacyTab',
 	components: {
-		AppSidebarTab: AppSidebarTab
+		AppSidebarTab: AppSidebarTab,
 	},
 	props: {
 		component: {
 			type: Object,
-			required: true
+			required: true,
 		},
-		name: {
+		id: {
 			type: String,
-			required: true
+			required: true,
 		},
 		fileInfo: {
 			type: Object,
 			default: () => {},
-			required: true
-		}
+			required: true,
+		},
 	},
 	computed: {
 		icon() {
 			return this.component.getIcon()
 		},
-		id() {
-			// copied from AppSidebarTab
-			return this.name.toLowerCase().replace(/ /g, '-')
+		name() {
+			return this.component.getLabel()
 		},
 		order() {
 			return this.component.order
@@ -64,17 +65,14 @@ export default {
 		// needed because AppSidebarTab also uses $parent.activeTab
 		activeTab() {
 			return this.$parent.activeTab
-		}
+		},
 	},
 	watch: {
-		activeTab(activeTab) {
-			if (activeTab === this.id && this.fileInfo) {
-				this.setFileInfo(this.fileInfo)
+		fileInfo(fileInfo) {
+			if (fileInfo) {
+				this.setFileInfo(fileInfo)
 			}
-		}
-	},
-	beforeMount() {
-		this.setFileInfo(this.fileInfo)
+		},
 	},
 	mounted() {
 		// append the backbone element and set the FileInfo
@@ -86,8 +84,8 @@ export default {
 	methods: {
 		setFileInfo(fileInfo) {
 			this.component.setFileInfo(new OCA.Files.FileInfoModel(fileInfo))
-		}
-	}
+		},
+	},
 }
 </script>
 <style>

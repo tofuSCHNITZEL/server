@@ -6,17 +6,14 @@
  * @author Bart Visscher <bartv@thisnet.nl>
  * @author Bjoern Schiessle <bjoern@schiessle.org>
  * @author Björn Schießle <bjoern@schiessle.org>
- * @author Christoph Wurst <christoph@owncloud.com>
- * @author Frank Karlitschek <frank@karlitschek.de>
- * @author Georg Ehrke <oc.list@georgehrke.com>
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
+ * @author Joas Schilling <coding@schilljs.com>
+ * @author John Molakvoæ (skjnldsv) <skjnldsv@protonmail.com>
+ * @author Julius Härtl <jus@bitgrid.net>
  * @author Lukas Reschke <lukas@statuscode.ch>
  * @author Morris Jobke <hey@morrisjobke.de>
- * @author Raghu Nayyar <me@iraghu.com>
  * @author Robin Appelman <robin@icewind.nl>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
- * @author Thomas Müller <thomas.mueller@tmit.eu>
- * @author Thomas Pulzer <t.pulzer@kniel.de>
- * @author Vincent Petry <pvince81@owncloud.com>
  *
  * @license AGPL-3.0
  *
@@ -30,7 +27,7 @@
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License, version 3,
- * along with this program.  If not, see <http://www.gnu.org/licenses/>
+ * along with this program. If not, see <http://www.gnu.org/licenses/>
  *
  */
 
@@ -73,6 +70,7 @@ $application->registerRoutes($this, [
 		['name' => 'Users#getVerificationCode', 'url' => '/settings/users/{account}/verify', 'verb' => 'GET'],
 		['name' => 'Users#usersList', 'url' => '/settings/users', 'verb' => 'GET'],
 		['name' => 'Users#usersListByGroup', 'url' => '/settings/users/{group}', 'verb' => 'GET', 'requirements' => ['group' => '.+']],
+		['name' => 'Users#setPreference', 'url' => '/settings/users/preferences/{key}', 'verb' => 'POST'],
 		['name' => 'LogSettings#setLogLevel', 'url' => '/settings/admin/log/level', 'verb' => 'POST'],
 		['name' => 'LogSettings#getEntries', 'url' => '/settings/admin/log/entries', 'verb' => 'GET'],
 		['name' => 'LogSettings#download', 'url' => '/settings/admin/log/download', 'verb' => 'GET'],

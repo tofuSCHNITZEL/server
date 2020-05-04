@@ -23,6 +23,7 @@
 <template>
 	<Multiselect ref="multiselect"
 		class="sharing-input"
+		:clear-on-select="false"
 		:disabled="!canReshare"
 		:hide-selected="true"
 		:internal-search="false"
@@ -60,7 +61,7 @@ export default {
 	name: 'SharingInput',
 
 	components: {
-		Multiselect
+		Multiselect,
 	},
 
 	mixins: [ShareTypes, ShareRequests],
@@ -69,26 +70,26 @@ export default {
 		shares: {
 			type: Array,
 			default: () => [],
-			required: true
+			required: true,
 		},
 		linkShares: {
 			type: Array,
 			default: () => [],
-			required: true
+			required: true,
 		},
 		fileInfo: {
 			type: Object,
 			default: () => {},
-			required: true
+			required: true,
 		},
 		reshare: {
 			type: Share,
-			default: null
+			default: null,
 		},
 		canReshare: {
 			type: Boolean,
-			required: true
-		}
+			required: true,
+		},
 	},
 
 	data() {
@@ -98,7 +99,7 @@ export default {
 			query: '',
 			recommendations: [],
 			ShareSearch: OCA.Sharing.ShareSearch.state,
-			suggestions: []
+			suggestions: [],
 		}
 	},
 
@@ -122,16 +123,16 @@ export default {
 				return t('files_sharing', 'Resharing is not allowed')
 			}
 			if (!allowRemoteSharing && allowMailSharing) {
-				return t('files_sharing', 'Name or email address...')
+				return t('files_sharing', 'Name or email address …')
 			}
 			if (allowRemoteSharing && !allowMailSharing) {
-				return t('files_sharing', 'Name or federated cloud ID...')
+				return t('files_sharing', 'Name or federated cloud ID …')
 			}
 			if (allowRemoteSharing && allowMailSharing) {
-				return t('files_sharing', 'Name, federated cloud ID or email address...')
+				return t('files_sharing', 'Name, federated cloud ID or email address …')
 			}
 
-			return 	t('files_sharing', 'Name...')
+			return t('files_sharing', 'Name …')
 		},
 
 		isValidQuery() {
@@ -147,10 +148,10 @@ export default {
 
 		noResultText() {
 			if (this.loading) {
-				return t('files_sharing', 'Searching...')
+				return t('files_sharing', 'Searching …')
 			}
 			return t('files_sharing', 'No elements found.')
-		}
+		},
 	},
 
 	mounted() {
@@ -176,10 +177,26 @@ export default {
 		 * @param {string} search the search query
 		 * @param {boolean} [lookup=false] search on lookup server
 		 */
-		async getSuggestions(search, lookup) {
+		async getSuggestions(search, lookup = false) {
 			this.loading = true
-			lookup = lookup || false
-			console.info(search, lookup)
+
+			if (OC.getCapabilities().files_sharing.sharee.query_lookup_default === true) {
+				lookup = true
+			}
+
+			const shareType = [
+				this.SHARE_TYPES.SHARE_TYPE_USER,
+				this.SHARE_TYPES.SHARE_TYPE_GROUP,
+				this.SHARE_TYPES.SHARE_TYPE_REMOTE,
+				this.SHARE_TYPES.SHARE_TYPE_REMOTE_GROUP,
+				this.SHARE_TYPES.SHARE_TYPE_CIRCLE,
+				this.SHARE_TYPES.SHARE_TYPE_ROOM,
+				this.SHARE_TYPES.SHARE_TYPE_GUEST,
+			]
+
+			if (OC.getCapabilities()['files_sharing']['public']['enabled'] === true) {
+				shareType.push(this.SHARE_TYPES.SHARE_TYPE_EMAIL)
+			}
 
 			const request = await axios.get(generateOcsUrl('apps/files_sharing/api/v1') + 'sharees', {
 				params: {
@@ -187,8 +204,9 @@ export default {
 					itemType: this.fileInfo.type === 'dir' ? 'folder' : 'file',
 					search,
 					lookup,
-					perPage: this.config.maxAutocompleteResults
-				}
+					perPage: this.config.maxAutocompleteResults,
+					shareType,
+				},
 			})
 
 			if (request.data.ocs.meta.statuscode !== 100) {
@@ -207,16 +225,21 @@ export default {
 			// remove invalid data and format to user-select layout
 			const exactSuggestions = this.filterOutExistingShares(rawExactSuggestions)
 				.map(share => this.formatForMultiselect(share))
+				// sort by type so we can get user&groups first...
+				.sort((a, b) => a.shareType - b.shareType)
 			const suggestions = this.filterOutExistingShares(rawSuggestions)
 				.map(share => this.formatForMultiselect(share))
+				// sort by type so we can get user&groups first...
+				.sort((a, b) => a.shareType - b.shareType)
 
 			// lookup clickable entry
+			// show if enabled and not already requested
 			const lookupEntry = []
-			if (data.lookupEnabled) {
+			if (data.lookupEnabled && !lookup) {
 				lookupEntry.push({
 					isNoUser: true,
 					displayName: t('files_sharing', 'Search globally'),
-					lookup: true
+					lookup: true,
 				})
 			}
 
@@ -247,8 +270,8 @@ export default {
 			const request = await axios.get(generateOcsUrl('apps/files_sharing/api/v1') + 'sharees_recommended', {
 				params: {
 					format: 'json',
-					itemType: this.fileInfo.type
-				}
+					itemType: this.fileInfo.type,
+				},
 			})
 
 			if (request.data.ocs.meta.statuscode !== 100) {
@@ -371,10 +394,10 @@ export default {
 				shareWith: result.value.shareWith,
 				shareType: result.value.shareType,
 				user: result.uuid || result.value.shareWith,
-				isNoUser: !result.uuid,
+				isNoUser: result.value.shareType !== this.SHARE_TYPES.SHARE_TYPE_USER,
 				displayName: result.name || result.label,
 				desc,
-				icon: this.shareTypeToIcon(result.value.shareType)
+				icon: this.shareTypeToIcon(result.value.shareType),
 			}
 		},
 
@@ -384,8 +407,17 @@ export default {
 		 */
 		async addShare(value) {
 			if (value.lookup) {
-				return this.getSuggestions(this.query, true)
+				await this.getSuggestions(this.query, true)
+
+				// focus the input again
+				this.$nextTick(() => {
+					this.$refs.multiselect.$el.querySelector('.multiselect__input').focus()
+				})
+				return true
 			}
+
+			// TODO: reset the search string when done
+			// https://github.com/shentao/vue-multiselect/issues/633
 
 			// handle externalResults from OCA.Sharing.ShareSearch
 			if (value.handler) {
@@ -400,7 +432,7 @@ export default {
 				const share = await this.createShare({
 					path,
 					shareType: value.shareType,
-					shareWith: value.shareWith
+					shareWith: value.shareWith,
 				})
 				this.$emit('add:share', share)
 
@@ -416,8 +448,8 @@ export default {
 			} finally {
 				this.loading = false
 			}
-		}
-	}
+		},
+	},
 }
 </script>
 

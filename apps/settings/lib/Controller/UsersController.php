@@ -1,4 +1,28 @@
 <?php
+/**
+ * @copyright Copyright (c) 2016, ownCloud, Inc.
+ *
+ * @author Arthur Schiwon <blizzz@arthur-schiwon.de>
+ * @author Bjoern Schiessle <bjoern@schiessle.org>
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
+ * @author John Molakvoæ (skjnldsv) <skjnldsv@protonmail.com>
+ * @author Roeland Jago Douma <roeland@famdouma.nl>
+ *
+ * @license AGPL-3.0
+ *
+ * This code is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License, version 3,
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License, version 3,
+ * along with this program. If not, see <http://www.gnu.org/licenses/>
+ *
+ */
 // FIXME: disabled for now to be able to inject IGroupManager and also use
 // getSubAdmin()
 //declare(strict_types=1);
@@ -44,10 +68,13 @@ use OC\AppFramework\Http;
 use OC\Encryption\Exceptions\ModuleDoesNotExistsException;
 use OC\ForbiddenException;
 use OC\Security\IdentityProof\Manager;
+use OCA\Settings\AppInfo\Application;
+use OCA\Settings\BackgroundJobs\VerifyUserData;
 use OCA\User_LDAP\User_Proxy;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\DataResponse;
+use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\BackgroundJob\IJobList;
 use OCP\Encryption\IManager;
@@ -60,7 +87,7 @@ use OCP\IUserManager;
 use OCP\IUserSession;
 use OCP\L10N\IFactory;
 use OCP\Mail\IMailer;
-use OCA\Settings\BackgroundJobs\VerifyUserData;
+use function in_array;
 
 class UsersController extends Controller {
 	/** @var IUserManager */
@@ -252,8 +279,26 @@ class UsersController extends Controller {
 		$serverData['canChangePassword'] = $canChangePassword;
 		$serverData['newUserGenerateUserID'] = $this->config->getAppValue('core', 'newUser.generateUserID', 'no') === 'yes';
 		$serverData['newUserRequireEmail'] = $this->config->getAppValue('core', 'newUser.requireEmail', 'no') === 'yes';
+		$serverData['newUserSendEmail'] = $this->config->getAppValue('core', 'newUser.sendEmail', 'yes') === 'yes';
 
 		return new TemplateResponse('settings', 'settings-vue', ['serverData' => $serverData]);
+	}
+
+	/**
+	 * @param string $key
+	 * @param string $value
+	 *
+	 * @return JSONResponse
+	 */
+	public function setPreference(string $key, string $value): JSONResponse {
+		$allowed = ['newUser.sendEmail'];
+		if (!in_array($key, $allowed, true)) {
+			return new JSONResponse([], Http::STATUS_FORBIDDEN);
+		}
+
+		$this->config->setAppValue('core', $key, $value);
+
+		return new JSONResponse([]);
 	}
 
 	/**

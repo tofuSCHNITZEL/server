@@ -131,6 +131,14 @@
 		dirInfo: null,
 
 		/**
+		 * Whether to prevent or to execute the default file actions when the
+		 * file name is clicked.
+		 *
+		 * @type boolean
+		 */
+		_defaultFileActionsDisabled: false,
+
+		/**
 		 * File actions handler, defaults to OCA.Files.FileActions
 		 * @type OCA.Files.FileActions
 		 */
@@ -292,6 +300,10 @@
 				this._detailsView.$el.addClass('disappear');
 			}
 
+			if (options && options.defaultFileActionsDisabled) {
+				this._defaultFileActionsDisabled = options.defaultFileActionsDisabled
+			}
+
 			this._initFileActions(options.fileActions);
 
 			if (this._detailsView) {
@@ -363,6 +375,13 @@
 			$(window).resize(this._onResize);
 
 			this.$el.on('show', this._onResize);
+
+			// reload files list on share accept
+			$('body').on('OCA.Notification.Action', function(eventObject) {
+				if (eventObject.notification.app === 'files_sharing' && eventObject.action.type === 'POST') {
+					self.reload()
+				}
+			});
 
 			this.updateSearch();
 
@@ -623,7 +642,7 @@
 		 * @param {string|OCA.Files.FileInfoModel} fileName file name from the current list or a FileInfoModel object
 		 * @param {boolean} [show=true] whether to open the sidebar if it was closed
 		 */
-		_updateDetailsView: function(fileName) {
+		_updateDetailsView: function(fileName, show) {
 			if (!(OCA.Files && OCA.Files.Sidebar)) {
 				console.error('No sidebar available');
 				return;
@@ -643,8 +662,18 @@
 			var model = this.getModelForFile(tr)
 			var path = model.attributes.path + '/' + model.attributes.name
 
+			// make sure the file list has the correct context available
+			if (this._currentFileModel) {
+				this._currentFileModel.off();
+			}
+			this.$fileList.children().removeClass('highlighted');
+			tr.addClass('highlighted');
+			this._currentFileModel = model;
+
 			// open sidebar and set file
-			OCA.Files.Sidebar.open(path.replace('//', '/'))
+			if (typeof show === 'undefined' || !!show || (OCA.Files.Sidebar.file !== '')) {
+				OCA.Files.Sidebar.open(path.replace('//', '/'))
+			}
 		},
 
 		/**
@@ -859,7 +888,9 @@
 				if (!this._detailsView || $(event.target).is('.nametext, .name, .thumbnail') || $(event.target).closest('.nametext').length) {
 					var filename = $tr.attr('data-file');
 					var renaming = $tr.data('renaming');
-					if (!renaming) {
+					if (this._defaultFileActionsDisabled) {
+						event.preventDefault();
+					} else if (!renaming) {
 						this.fileActions.currentFile = $tr.find('td');
 						var mime = this.fileActions.getCurrentMimeType();
 						var type = this.fileActions.getCurrentType();
@@ -1507,6 +1538,11 @@
 				"class": "name",
 				"href": linkUrl
 			});
+			if (this._defaultFileActionsDisabled) {
+				linkElem = $('<p></p>').attr({
+					"class": "name"
+				})
+			}
 
 			linkElem.append('<div class="thumbnail-wrapper"><div class="thumbnail" style="background-image:url(' + icon + ');"></div></div>');
 
@@ -1574,6 +1610,8 @@
 			td.append(linkElem);
 			tr.append(td);
 
+			var isDarkTheme = OCA.Accessibility && OCA.Accessibility.theme === 'dark'
+
 			try {
 				var maxContrastHex = window.getComputedStyle(document.documentElement)
 					.getPropertyValue('--color-text-maxcontrast').trim()
@@ -1582,10 +1620,7 @@
 				}
 				var maxContrast = parseInt(maxContrastHex.substring(1, 3), 16)
 			} catch(error) {
-				var maxContrast = OCA.Accessibility
-					&& OCA.Accessibility.theme === 'themedark'
-						? 130
-						: 118
+				var maxContrast = isDarkTheme ? 130 : 118
 			}
 
 			// size column
@@ -1601,7 +1636,7 @@
 					sizeColor = maxContrast;
 				}
 
-				if (OCA.Accessibility && OCA.Accessibility.theme === 'themedark') {
+				if (isDarkTheme) {
 					sizeColor = Math.abs(sizeColor);
 					// ensure that the dimmest color is still readable
 					// min. color contrast for normal text on black background according to WCAG AA
@@ -1629,7 +1664,7 @@
 				modifiedColor = maxContrast;
 			}
 
-			if (OCA.Accessibility && OCA.Accessibility.theme === 'themedark') {
+			if (isDarkTheme) {
 				modifiedColor = Math.abs(modifiedColor);
 
 				// ensure that the dimmest color is still readable
@@ -2933,8 +2968,8 @@
 					deferred.resolve(status, data);
 				})
 				.fail(function(status) {
-					OC.Notification.show(t('files', 'Could not create file "{file}"',
-						{file: name}), {type: 'error'}
+					OCP.Toast.error(
+						t('files', 'Could not fetch file details "{file}"', { file: fileName })
 					);
 					deferred.reject(status);
 				});
@@ -3642,9 +3677,9 @@
 		 */
 		registerTabView: function(tabView) {
 			console.warn('registerTabView is deprecated! It will be removed in nextcloud 20.');
-			const name = tabView.getLabel()
-			if (name) {
-				OCA.Files.Sidebar.registerTab(new OCA.Files.Sidebar.Tab(name, tabView, true))
+			const enabled = tabView.canDisplay || undefined
+			if (tabView.id) {
+				OCA.Files.Sidebar.registerTab(new OCA.Files.Sidebar.Tab(tabView.id, tabView, enabled, true))
 			}
 		},
 

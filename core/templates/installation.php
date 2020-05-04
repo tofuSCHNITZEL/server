@@ -15,10 +15,10 @@ script('core', [
 		<?php foreach($_['errors'] as $err): ?>
 		<p>
 			<?php if(is_array($err)):?>
-				<?php print_unescaped($err['error']); ?>
-				<span class='hint'><?php print_unescaped($err['hint']); ?></span>
+				<?php p($err['error']); ?>
+				<span class='hint'><?php p($err['hint']); ?></span>
 			<?php else: ?>
-				<?php print_unescaped($err); ?>
+				<?php p($err); ?>
 			<?php endif; ?>
 		</p>
 		<?php endforeach; ?>
@@ -50,7 +50,7 @@ script('core', [
 				autocomplete="off" autocapitalize="none" autocorrect="off" required>
 			<label for="adminpass" class="infield"><?php p($l->t( 'Password' )); ?></label>
 			<input type="checkbox" id="show" class="hidden-visually" name="show">
-			<label for="show"></label>
+			<label for="show" class="hidden-visually"><?php p($l->t( 'Show password')); ?></label>
 		</p>
 	</fieldset>
 
@@ -157,6 +157,16 @@ script('core', [
 			<p><?php p($l->t('If you use clients for file syncing, the use of SQLite is highly discouraged.')); ?></p>
 		</fieldset>
 	<?php endif ?>
+
+	<fieldset>
+		<p class="info">
+			<input type="checkbox" id="install-recommended-apps" name="install-recommended-apps" class="checkbox checkbox--white" checked>
+			<label for="install-recommended-apps">
+				<?php p($l->t( 'Install recommended apps' )); ?>
+				<span><?php p($l->t( 'Calendar, Contacts, Talk, Mail & OnlyOffice' )); ?></span>
+			</label>
+		</p>
+	</fieldset>
 
 	<div class="icon-loading-dark float-spinner">&nbsp;</div>
 

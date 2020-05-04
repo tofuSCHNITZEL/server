@@ -1,8 +1,13 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * @copyright Copyright (c) 2016, ownCloud, Inc.
  *
+ * @author Branko Kokanovic <branko@kokanovic.org>
+ * @author Carsten Wiedmann <carsten_sttgt@gmx.de>
+ * @author Jared Boone <jared.boone@gmail.com>
  * @author Joas Schilling <coding@schilljs.com>
  * @author Lukas Reschke <lukas@statuscode.ch>
  * @author Morris Jobke <hey@morrisjobke.de>
@@ -20,7 +25,7 @@ declare(strict_types=1);
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License, version 3,
- * along with this program.  If not, see <http://www.gnu.org/licenses/>
+ * along with this program. If not, see <http://www.gnu.org/licenses/>
  *
  */
 
@@ -31,11 +36,12 @@ use Egulias\EmailValidator\Validation\RFCValidation;
 use OCP\Defaults;
 use OCP\IConfig;
 use OCP\IL10N;
+use OCP\ILogger;
 use OCP\IURLGenerator;
+use OCP\L10N\IFactory;
 use OCP\Mail\IAttachment;
 use OCP\Mail\IEMailTemplate;
 use OCP\Mail\IMailer;
-use OCP\ILogger;
 use OCP\Mail\IMessage;
 
 /**
@@ -69,6 +75,10 @@ class Mailer implements IMailer {
 	private $urlGenerator;
 	/** @var IL10N */
 	private $l10n;
+	/**
+	 * @var IFactory
+	 */
+	private $l10nFactory;
 
 	/**
 	 * @param IConfig $config
@@ -81,12 +91,14 @@ class Mailer implements IMailer {
 						 ILogger $logger,
 						 Defaults $defaults,
 						 IURLGenerator $urlGenerator,
-						 IL10N $l10n) {
+						 IL10N $l10n,
+						 IFactory $l10nFactory) {
 		$this->config = $config;
 		$this->logger = $logger;
 		$this->defaults = $defaults;
 		$this->urlGenerator = $urlGenerator;
 		$this->l10n = $l10n;
+		$this->l10nFactory = $l10nFactory;
 	}
 
 	/**
@@ -135,7 +147,7 @@ class Mailer implements IMailer {
 			return new $class(
 				$this->defaults,
 				$this->urlGenerator,
-				$this->l10n,
+				$this->l10nFactory,
 				$emailId,
 				$data
 			);
@@ -144,7 +156,7 @@ class Mailer implements IMailer {
 		return new EMailTemplate(
 			$this->defaults,
 			$this->urlGenerator,
-			$this->l10n,
+			$this->l10nFactory,
 			$emailId,
 			$data
 		);
@@ -164,7 +176,7 @@ class Mailer implements IMailer {
 		$debugMode = $this->config->getSystemValue('mail_smtpdebug', false);
 
 		if (empty($message->getFrom())) {
-			$message->setFrom([\OCP\Util::getDefaultEmailAddress($this->defaults->getName()) => $this->defaults->getName()]);
+			$message->setFrom([\OCP\Util::getDefaultEmailAddress('no-reply') => $this->defaults->getName()]);
 		}
 
 		$failedRecipients = [];

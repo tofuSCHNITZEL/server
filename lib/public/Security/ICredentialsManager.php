@@ -16,7 +16,7 @@
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License, version 3,
- * along with this program.  If not, see <http://www.gnu.org/licenses/>
+ * along with this program. If not, see <http://www.gnu.org/licenses/>
  *
  */
 
@@ -33,7 +33,7 @@ interface ICredentialsManager {
 	/**
 	 * Store a set of credentials
 	 *
-	 * @param string|null $userId Null for system-wide credentials
+	 * @param string $userId empty string for system-wide credentials
 	 * @param string $identifier
 	 * @param mixed $credentials
 	 * @since 8.2.0
@@ -43,7 +43,7 @@ interface ICredentialsManager {
 	/**
 	 * Retrieve a set of credentials
 	 *
-	 * @param string|null $userId Null for system-wide credentials
+	 * @param string $userId empty string for system-wide credentials
 	 * @param string $identifier
 	 * @return mixed
 	 * @since 8.2.0
@@ -53,7 +53,7 @@ interface ICredentialsManager {
 	/**
 	 * Delete a set of credentials
 	 *
-	 * @param string|null $userId Null for system-wide credentials
+	 * @param string $userId empty string for system-wide credentials
 	 * @param string $identifier
 	 * @return int rows removed
 	 * @since 8.2.0

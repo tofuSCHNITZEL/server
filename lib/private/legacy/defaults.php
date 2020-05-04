@@ -3,12 +3,14 @@
  * @copyright Copyright (c) 2016, ownCloud, Inc.
  *
  * @author Björn Schießle <bjoern@schiessle.org>
- * @author Felix A. Epp <work@felixepp.de>
+ * @author Daniel Kesselberg <mail@danielkesselberg.de>
  * @author Jan-Christoph Borchardt <hey@jancborchardt.net>
+ * @author Jörn Friedrich Dreyer <jfd@butonic.de>
  * @author Julius Haertl <jus@bitgrid.net>
  * @author Julius Härtl <jus@bitgrid.net>
- * @author Jörn Friedrich Dreyer <jfd@butonic.de>
  * @author Lukas Reschke <lukas@statuscode.ch>
+ * @author Markus Staab <markus.staab@redaxo.de>
+ * @author Michael Weimann <mail@michael-weimann.eu>
  * @author Morris Jobke <hey@morrisjobke.de>
  * @author Pascal de Bruijn <pmjdebruijn@pcode.nl>
  * @author Robin Appelman <robin@icewind.nl>
@@ -30,7 +32,7 @@
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License, version 3,
- * along with this program.  If not, see <http://www.gnu.org/licenses/>
+ * along with this program. If not, see <http://www.gnu.org/licenses/>
  *
  */
 class OC_Defaults {
@@ -213,12 +215,12 @@ class OC_Defaults {
 	 * Returns slogan
 	 * @return string slogan
 	 */
-	public function getSlogan() {
+	public function getSlogan(?string $lang = null) {
 		if ($this->themeExist('getSlogan')) {
-			return $this->theme->getSlogan();
+			return $this->theme->getSlogan($lang);
 		} else {
 			if ($this->defaultSlogan === null) {
-				$l10n = \OC::$server->getL10N('lib');
+				$l10n = \OC::$server->getL10N('lib', $lang);
 				$this->defaultSlogan = $l10n->t('a safe home for all your data');
 			}
 			return $this->defaultSlogan;

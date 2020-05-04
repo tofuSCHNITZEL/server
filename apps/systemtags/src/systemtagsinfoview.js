@@ -11,7 +11,7 @@
 (function(OCA) {
 
 	function modelToSelection(model) {
-		var data = model.toJSON()
+		const data = model.toJSON()
 		if (!OC.isUserAdmin() && !data.canAssign) {
 			data.locked = true
 		}
@@ -25,7 +25,7 @@
 	 * Displays a file's system tags
 	 *
 	 */
-	var SystemTagsInfoView = OCA.Files.DetailFileInfoView.extend(
+	const SystemTagsInfoView = OCA.Files.DetailFileInfoView.extend(
 		/** @lends OCA.SystemTags.SystemTagsInfoView.prototype */ {
 
 			_rendered: false,
@@ -33,13 +33,16 @@
 			className: 'systemTagsInfoView',
 			name: 'systemTags',
 
+			/* required by the new files sidebar to check if the view is unique */
+			id: 'systemTagsInfoView',
+
 			/**
 			 * @type OC.SystemTags.SystemTagsInputField
 			 */
 			_inputView: null,
 
 			initialize: function(options) {
-				var self = this
+				const self = this
 				options = options || {}
 
 				this._inputView = new OC.SystemTags.SystemTagsInputField({
@@ -49,7 +52,7 @@
 					isAdmin: OC.isUserAdmin(),
 					initSelection: function(element, callback) {
 						callback(self.selectedTagsCollection.map(modelToSelection))
-					}
+					},
 				})
 
 				this.selectedTagsCollection = new OC.SystemTags.SystemTagsMappingCollection([], { objectType: 'files' })
@@ -90,7 +93,7 @@
 			 */
 			_onTagRenamedGlobally: function(changedTag) {
 			// also rename it in the selection, if applicable
-				var selectedTagMapping = this.selectedTagsCollection.get(changedTag.id)
+				const selectedTagMapping = this.selectedTagsCollection.get(changedTag.id)
 				if (selectedTagMapping) {
 					selectedTagMapping.set(changedTag.toJSON())
 				}
@@ -110,7 +113,7 @@
 			},
 
 			setFileInfo: function(fileInfo) {
-				var self = this
+				const self = this
 				if (!this._rendered) {
 					this.render()
 				}
@@ -121,11 +124,12 @@
 						success: function(collection) {
 							collection.fetched = true
 
-							var appliedTags = collection.map(modelToSelection)
+							const appliedTags = collection.map(modelToSelection)
 							self._inputView.setData(appliedTags)
-
-							self.show()
-						}
+							if (appliedTags.length > 0) {
+								self.show()
+							}
+						},
 					})
 				}
 
@@ -152,13 +156,17 @@
 				this.$el.addClass('hidden')
 			},
 
+			toggle: function() {
+				this.$el.toggleClass('hidden')
+			},
+
 			openDropdown: function() {
 				this.$el.find('.systemTagsInputField').select2('open')
 			},
 
 			remove: function() {
 				this._inputView.remove()
-			}
+			},
 		})
 
 	OCA.SystemTags.SystemTagsInfoView = SystemTagsInfoView

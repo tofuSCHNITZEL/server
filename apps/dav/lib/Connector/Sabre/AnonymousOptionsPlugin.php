@@ -2,6 +2,10 @@
 /**
  * @copyright Copyright (c) 2018 Robin Appelman <robin@icewind.nl>
  *
+ * @author Bastien Durel <bastien@durel.org>
+ * @author Julius Härtl <jus@bitgrid.net>
+ * @author Robin Appelman <robin@icewind.nl>
+ *
  * @license GNU AGPL version 3 or any later version
  *
  * This program is free software: you can redistribute it and/or modify
@@ -15,7 +19,7 @@
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  */
 
@@ -58,9 +62,12 @@ class AnonymousOptionsPlugin extends ServerPlugin {
 	 */
 	public function handleAnonymousOptions(RequestInterface $request, ResponseInterface $response) {
 		$isOffice = preg_match('/Microsoft Office/i', $request->getHeader('User-Agent'));
-		$isAnonymousOption = ($request->getMethod() === 'OPTIONS' && ($request->getHeader('Authorization') === null || trim($request->getHeader('Authorization')) === 'Bearer') && $this->isRequestInRoot($request->getPath()));
-		$isOfficeHead = $request->getMethod() === 'HEAD' && $isOffice && $request->getHeader('Authorization') === 'Bearer';
-		if ($isAnonymousOption || $isOfficeHead) {
+		$emptyAuth = $request->getHeader('Authorization') === null
+			|| $request->getHeader('Authorization') === ''
+			|| trim($request->getHeader('Authorization')) === 'Bearer';
+		$isAnonymousOfficeOption = $request->getMethod() === 'OPTIONS' && $isOffice && $emptyAuth;
+		$isOfficeHead = $request->getMethod() === 'HEAD' && $isOffice && $emptyAuth;
+		if ($isAnonymousOfficeOption || $isOfficeHead) {
 			/** @var CorePlugin $corePlugin */
 			$corePlugin = $this->server->getPlugin('core');
 			// setup a fake tree for anonymous access

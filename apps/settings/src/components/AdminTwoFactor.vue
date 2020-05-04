@@ -1,7 +1,7 @@
 <template>
 	<div>
 		<p class="settings-hint">
-			{{ t('settings', 'Two-factor authentication can be enforced for all	users and specific groups. If they do not have a two-factor provider configured, they will be unable to log into the system.') }}
+			{{ t('settings', 'Two-factor authentication can be enforced for all users and specific groups. If they do not have a two-factor provider configured, they will be unable to log into the system.') }}
 		</p>
 		<p v-if="loading">
 			<span class="icon-loading-small two-factor-loading" />
@@ -18,7 +18,7 @@
 			<h3>{{ t('settings', 'Limit to groups') }}</h3>
 			{{ t('settings', 'Enforcement of two-factor authentication can be set for certain groups only.') }}
 			<p>
-				{{ t('settings', 'Two-factor authentication is enforced for all	members of the following groups.') }}
+				{{ t('settings', 'Two-factor authentication is enforced for all members of the following groups.') }}
 			</p>
 			<p>
 				<Multiselect v-model="enforcedGroups"
@@ -33,7 +33,7 @@
 					@search-change="searchGroup" />
 			</p>
 			<p>
-				{{ t('settings', 'Two-factor authentication is not enforced for	members of the following groups.') }}
+				{{ t('settings', 'Two-factor authentication is not enforced for members of the following groups.') }}
 			</p>
 			<p>
 				<Multiselect v-model="excludedGroups"
@@ -73,14 +73,14 @@ import _ from 'lodash'
 export default {
 	name: 'AdminTwoFactor',
 	components: {
-		Multiselect
+		Multiselect,
 	},
 	data() {
 		return {
 			loading: false,
 			dirty: false,
 			groups: [],
-			loadingGroups: false
+			loadingGroups: false,
 		}
 	},
 	computed: {
@@ -91,7 +91,7 @@ export default {
 			set: function(val) {
 				this.dirty = true
 				this.$store.commit('setEnforced', val)
-			}
+			},
 		},
 		enforcedGroups: {
 			get: function() {
@@ -100,7 +100,7 @@ export default {
 			set: function(val) {
 				this.dirty = true
 				this.$store.commit('setEnforcedGroups', val)
-			}
+			},
 		},
 		excludedGroups: {
 			get: function() {
@@ -109,8 +109,8 @@ export default {
 			set: function(val) {
 				this.dirty = true
 				this.$store.commit('setExcludedGroups', val)
-			}
-		}
+			},
+		},
 	},
 	mounted() {
 		// Groups are loaded dynamically, but the assigned ones *should*
@@ -138,7 +138,7 @@ export default {
 			const data = {
 				enforced: this.enforced,
 				enforcedGroups: this.enforcedGroups,
-				excludedGroups: this.excludedGroups
+				excludedGroups: this.excludedGroups,
 			}
 			axios.put(OC.generateUrl('/settings/api/admin/twofactorauth'), data)
 				.then(resp => resp.data)
@@ -150,8 +150,8 @@ export default {
 					console.error('could not save changes', err)
 				})
 				.then(() => { this.loading = false })
-		}
-	}
+		},
+	},
 }
 </script>
 

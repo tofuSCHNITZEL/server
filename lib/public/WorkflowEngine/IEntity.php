@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * @copyright Copyright (c) 2019 Arthur Schiwon <blizzz@arthur-schiwon.de>
  *
@@ -18,7 +20,7 @@ declare(strict_types=1);
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  */
 
@@ -73,5 +75,13 @@ interface IEntity {
 	 * @since 18.0.0
 	 */
 	public function prepareRuleMatcher(IRuleMatcher $ruleMatcher, string $eventName, Event $event): void;
+
+	/**
+	 * returns whether the provided user id is allowed to run a flow against
+	 * the known context
+	 *
+	 * @since 18.0.0
+	 */
+	public function isLegitimatedForUserId(string $userId): bool;
 
 }

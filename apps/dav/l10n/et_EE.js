@@ -48,11 +48,15 @@ OC.L10N.register(
     "Invitation updated" : "Kutse uuendatud",
     "When:" : "Millal:",
     "Link:" : "Link:",
+    "Accept" : "Nõustu",
+    "Decline" : "Keeldu",
     "Contacts" : "Kontaktid",
+    "WebDAV" : "WebDAV",
+    "Tentative" : "Esialgne",
+    "Save" : "Salvesta",
+    "Send invitations to attendees" : "Saada osalejatele kutsed",
     "Technical details" : "Tehnilised detailid",
     "Remote Address: %s" : "Kaugaadress: %s",
-    "Request ID: %s" : "Päringu ID: %s",
-    "Send invitations to attendees" : "Saada osalejatele kutsed",
-    "Please make sure to properly set up the email settings above." : "Veendu, et e-posti seaded oleksid eespool õigesti seadistatud."
+    "Request ID: %s" : "Päringu ID: %s"
 },
 "nplurals=2; plural=(n != 1);");

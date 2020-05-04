@@ -83,7 +83,7 @@ class LoginControllerTest extends TestCase {
 	/** @var IInitialStateService|MockObject */
 	private $initialStateService;
 
-	public function setUp() {
+	protected function setUp(): void {
 		parent::setUp();
 		$this->request = $this->createMock(IRequest::class);
 		$this->userManager = $this->createMock(\OC\User\Manager::class);
@@ -128,6 +128,10 @@ class LoginControllerTest extends TestCase {
 			->method('getCookie')
 			->with('nc_token')
 			->willReturn(null);
+		$this->request
+			->expects($this->once())
+			->method('isUserAgent')
+			->willReturn(false);
 		$this->config
 			->expects($this->never())
 			->method('deleteUserValue');
@@ -142,12 +146,36 @@ class LoginControllerTest extends TestCase {
 		$this->assertEquals($expected, $this->loginController->logout());
 	}
 
+	public function testLogoutNoClearSiteData() {
+		$this->request
+			->expects($this->once())
+			->method('getCookie')
+			->with('nc_token')
+			->willReturn(null);
+		$this->request
+			->expects($this->once())
+			->method('isUserAgent')
+			->willReturn(true);
+		$this->urlGenerator
+			->expects($this->once())
+			->method('linkToRouteAbsolute')
+			->with('core.login.showLoginForm')
+			->willReturn('/login');
+
+		$expected = new RedirectResponse('/login');
+		$this->assertEquals($expected, $this->loginController->logout());
+	}
+
 	public function testLogoutWithToken() {
 		$this->request
 			->expects($this->once())
 			->method('getCookie')
 			->with('nc_token')
 			->willReturn('MyLoginToken');
+		$this->request
+			->expects($this->once())
+			->method('isUserAgent')
+			->willReturn(false);
 		$user = $this->createMock(IUser::class);
 		$user
 			->expects($this->once())
@@ -475,7 +503,7 @@ class LoginControllerTest extends TestCase {
 			->method('getUID')
 			->will($this->returnValue('jane'));
 		$password = 'secret';
-		$originalUrl = 'another%20url';
+		$originalUrl = 'another url';
 		$redirectUrl = 'http://localhost/another url';
 
 		$this->request
@@ -517,7 +545,7 @@ class LoginControllerTest extends TestCase {
 			$this->request,
 			$user,
 			$password,
-			'%2Fapps%2Fmail'
+			'/apps/mail'
 		);
 		$loginResult = LoginResult::success($loginData);
 		$this->chain->expects($this->once())
@@ -533,7 +561,7 @@ class LoginControllerTest extends TestCase {
 			->will($this->returnValue($redirectUrl));
 		$expected = new \OCP\AppFramework\Http\RedirectResponse($redirectUrl);
 
-		$response = $this->loginController->tryLogin($user, $password, '%2Fapps%2Fmail');
+		$response = $this->loginController->tryLogin($user, $password, '/apps/mail');
 
 		$this->assertEquals($expected, $response);
 	}

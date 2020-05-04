@@ -2,10 +2,12 @@
 /**
  * @copyright Copyright (c) 2016, ownCloud, Inc.
  *
+ * @author Arthur Schiwon <blizzz@arthur-schiwon.de>
  * @author Bjoern Schiessle <bjoern@schiessle.org>
  * @author Björn Schießle <bjoern@schiessle.org>
  * @author Joas Schilling <coding@schilljs.com>
  * @author Lukas Reschke <lukas@statuscode.ch>
+ * @author Maxence Lange <maxence@artificial-owl.com>
  * @author Morris Jobke <hey@morrisjobke.de>
  * @author Robin Appelman <robin@icewind.nl>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
@@ -23,30 +25,30 @@
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License, version 3,
- * along with this program.  If not, see <http://www.gnu.org/licenses/>
+ * along with this program. If not, see <http://www.gnu.org/licenses/>
  *
  */
 
 namespace OCA\FederatedFileSharing;
 
+use OC\Share20\Exception\InvalidShare;
 use OC\Share20\Share;
+use OCP\DB\QueryBuilder\IQueryBuilder;
 use OCP\Federation\ICloudFederationProviderManager;
 use OCP\Federation\ICloudIdManager;
-use OCP\DB\QueryBuilder\IQueryBuilder;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
+use OCP\Files\Node;
+use OCP\Files\NotFoundException;
 use OCP\IConfig;
+use OCP\IDBConnection;
 use OCP\IL10N;
 use OCP\ILogger;
 use OCP\IUserManager;
 use OCP\Share\Exceptions\GenericShareException;
+use OCP\Share\Exceptions\ShareNotFound;
 use OCP\Share\IShare;
 use OCP\Share\IShareProvider;
-use OC\Share20\Exception\InvalidShare;
-use OCP\Share\Exceptions\ShareNotFound;
-use OCP\Files\NotFoundException;
-use OCP\IDBConnection;
-use OCP\Files\Node;
 
 /**
  * Class FederatedShareProvider
@@ -97,7 +99,7 @@ class FederatedShareProvider implements IShareProvider {
 	private $cloudFederationProviderManager;
 
 	/** @var array list of supported share types */
-	private $supportedShareType = [\OCP\Share::SHARE_TYPE_REMOTE_GROUP, \OCP\Share::SHARE_TYPE_REMOTE];
+	private $supportedShareType = [IShare::TYPE_REMOTE_GROUP, IShare::TYPE_REMOTE, IShare::TYPE_CIRCLE];
 
 	/**
 	 * DefaultShareProvider constructor.
@@ -597,7 +599,8 @@ class FederatedShareProvider implements IShareProvider {
 	private function removeShareFromTableById($shareId) {
 		$qb = $this->dbConnection->getQueryBuilder();
 		$qb->delete('share')
-			->where($qb->expr()->eq('id', $qb->createNamedParameter($shareId)));
+			->where($qb->expr()->eq('id', $qb->createNamedParameter($shareId)))
+			->andWhere($qb->expr()->neq('share_type', $qb->createNamedParameter(IShare::TYPE_CIRCLE)));
 		$qb->execute();
 
 		$qb->delete('federated_reshares')
@@ -1043,7 +1046,7 @@ class FederatedShareProvider implements IShareProvider {
 		if ($this->gsConfig->isGlobalScaleEnabled()) {
 			return true;
 		}
-		$result = $this->config->getAppValue('files_sharing', 'lookupServerEnabled', 'no');
+		$result = $this->config->getAppValue('files_sharing', 'lookupServerEnabled', 'yes');
 		return ($result === 'yes');
 	}
 

@@ -30,30 +30,32 @@ Vue.use(VueClipboard)
 
 Vue.prototype.t = t
 
-window.addEventListener('DOMContentLoaded', () => {
-	// Init Sidebar Service
-	if (window.OCA && window.OCA.Files) {
-		Object.assign(window.OCA.Files, { Sidebar: new Sidebar() })
-		Object.assign(window.OCA.Files.Sidebar, { Tab })
-	}
+// Init Sidebar Service
+if (!window.OCA.Files) {
+	window.OCA.Files = {}
+}
+Object.assign(window.OCA.Files, { Sidebar: new Sidebar() })
+Object.assign(window.OCA.Files.Sidebar, { Tab })
 
+window.addEventListener('DOMContentLoaded', () => {
 	// Make sure we have a proper layout
 	if (document.getElementById('content')) {
 
 		// Make sure we have a mountpoint
 		if (!document.getElementById('app-sidebar')) {
-			var contentElement = document.getElementById('content')
-			var sidebarElement = document.createElement('div')
+			const contentElement = document.getElementById('content')
+			const sidebarElement = document.createElement('div')
 			sidebarElement.id = 'app-sidebar'
 			contentElement.appendChild(sidebarElement)
 		}
 	}
 
 	// Init vue app
-	const AppSidebar = new Vue({
-		// eslint-disable-next-line vue/match-component-file-name
+	const View = Vue.extend(SidebarView)
+	const AppSidebar = new View({
 		name: 'SidebarRoot',
-		render: h => h(SidebarView)
 	})
 	AppSidebar.$mount('#app-sidebar')
+	window.OCA.Files.Sidebar.open = AppSidebar.open
+	window.OCA.Files.Sidebar.close = AppSidebar.close
 })

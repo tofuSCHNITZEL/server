@@ -1,13 +1,19 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * @copyright 2017, Morris Jobke <hey@morrisjobke.de>
  * @copyright 2017, Lukas Reschke <lukas@statuscode.ch>
  *
  * @author Bjoern Schiessle <bjoern@schiessle.org>
+ * @author brad2014 <brad2014@users.noreply.github.com>
  * @author Joas Schilling <coding@schilljs.com>
+ * @author Julius Härtl <jus@bitgrid.net>
  * @author Lukas Reschke <lukas@statuscode.ch>
  * @author Morris Jobke <hey@morrisjobke.de>
+ * @author Roeland Jago Douma <roeland@famdouma.nl>
+ * @author Tomasz Paluszkiewicz <tomasz.paluszkiewicz@gmail.com>
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -22,15 +28,15 @@ declare(strict_types=1);
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  */
 
 namespace OC\Mail;
 
 use OCP\Defaults;
-use OCP\IL10N;
 use OCP\IURLGenerator;
+use OCP\L10N\IFactory;
 use OCP\Mail\IEMailTemplate;
 
 /**
@@ -46,8 +52,8 @@ class EMailTemplate implements IEMailTemplate {
 	protected $themingDefaults;
 	/** @var IURLGenerator */
 	protected $urlGenerator;
-	/** @var IL10N */
-	protected $l10n;
+	/** @var IFactory */
+	protected $l10nFactory;
 	/** @var string */
 	protected $emailId;
 	/** @var array */
@@ -344,21 +350,14 @@ EOF;
 </table>
 EOF;
 
-	/**
-	 * @param Defaults $themingDefaults
-	 * @param IURLGenerator $urlGenerator
-	 * @param IL10N $l10n
-	 * @param string $emailId
-	 * @param array $data
-	 */
 	public function __construct(Defaults $themingDefaults,
 								IURLGenerator $urlGenerator,
-								IL10N $l10n,
+								IFactory $l10nFactory,
 								$emailId,
 								array $data) {
 		$this->themingDefaults = $themingDefaults;
 		$this->urlGenerator = $urlGenerator;
-		$this->l10n = $l10n;
+		$this->l10nFactory = $l10nFactory;
 		$this->htmlBody .= $this->head;
 		$this->emailId = $emailId;
 		$this->data = $data;
@@ -601,9 +600,10 @@ EOF;
 	 *
 	 * @param string $text If the text is empty the default "Name - Slogan<br>This is an automatically sent email" will be used
 	 */
-	public function addFooter(string $text = '') {
+	public function addFooter(string $text = '', ?string $lang = null) {
 		if($text === '') {
-			$text = $this->themingDefaults->getName() . ' - ' . $this->themingDefaults->getSlogan() . '<br>' . $this->l10n->t('This is an automatically sent email, please do not reply.');
+			$l10n = $this->l10nFactory->get('lib', $lang);
+			$text = $this->themingDefaults->getName() . ' - ' . $this->themingDefaults->getSlogan($lang) . '<br>' . $l10n->t('This is an automatically sent email, please do not reply.');
 		}
 
 		if ($this->footerAdded) {

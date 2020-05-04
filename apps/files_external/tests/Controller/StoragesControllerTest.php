@@ -5,6 +5,7 @@
  * @author Joas Schilling <coding@schilljs.com>
  * @author Morris Jobke <hey@morrisjobke.de>
  * @author Robin McCorkell <robin@mccorkell.me.uk>
+ * @author Roeland Jago Douma <roeland@famdouma.nl>
  * @author Vincent Petry <pvince81@owncloud.com>
  *
  * @license AGPL-3.0
@@ -19,19 +20,20 @@
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License, version 3,
- * along with this program.  If not, see <http://www.gnu.org/licenses/>
+ * along with this program. If not, see <http://www.gnu.org/licenses/>
  *
  */
+
 namespace OCA\Files_External\Tests\Controller;
 
+use OCA\Files_External\Controller\GlobalStoragesController;
 use OCA\Files_External\Lib\Auth\AuthMechanism;
 use OCA\Files_External\Lib\Backend\Backend;
-use \OCP\AppFramework\Http;
 
-use \OCA\Files_External\Controller\GlobalStoragesController;
-use \OCA\Files_External\Service\GlobalStoragesService;
 use OCA\Files_External\Lib\StorageConfig;
 use OCA\Files_External\NotFoundException;
+use OCA\Files_External\Service\GlobalStoragesService;
+use OCP\AppFramework\Http;
 
 abstract class StoragesControllerTest extends \Test\TestCase {
 
@@ -45,11 +47,11 @@ abstract class StoragesControllerTest extends \Test\TestCase {
 	 */
 	protected $service;
 
-	public function setUp() {
+	protected function setUp(): void {
 		\OC_Mount_Config::$skipTest = true;
 	}
 
-	public function tearDown() {
+	protected function tearDown(): void {
 		\OC_Mount_Config::$skipTest = false;
 	}
 
@@ -64,6 +66,8 @@ abstract class StoragesControllerTest extends \Test\TestCase {
 			->willReturn($storageClass);
 		$backend->method('getIdentifier')
 			->willReturn('identifier:'.$class);
+		$backend->method('getParameters')
+			->willReturn([]);
 		return $backend;
 	}
 
@@ -78,6 +82,8 @@ abstract class StoragesControllerTest extends \Test\TestCase {
 			->willReturn($scheme);
 		$authMech->method('getIdentifier')
 			->willReturn('identifier:'.$class);
+		$authMech->method('getParameters')
+			->willReturn([]);
 
 		return $authMech;
 	}

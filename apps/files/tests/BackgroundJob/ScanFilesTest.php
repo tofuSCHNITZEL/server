@@ -3,6 +3,7 @@
  * @copyright Copyright (c) 2016, ownCloud, Inc.
  *
  * @author Lukas Reschke <lukas@statuscode.ch>
+ * @author Robin Appelman <robin@icewind.nl>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  *
  * @license AGPL-3.0
@@ -17,16 +18,17 @@
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License, version 3,
- * along with this program.  If not, see <http://www.gnu.org/licenses/>
+ * along with this program. If not, see <http://www.gnu.org/licenses/>
  *
  */
+
 namespace OCA\Files\Tests\BackgroundJob;
 
-use OCP\IUser;
-use Test\TestCase;
-use OCP\IConfig;
-use OCP\IUserManager;
 use OCA\Files\BackgroundJob\ScanFiles;
+use OCP\IConfig;
+use OCP\IUser;
+use OCP\IUserManager;
+use Test\TestCase;
 
 /**
  * Class ScanFilesTest
@@ -41,7 +43,7 @@ class ScanFilesTest extends TestCase {
 	/** @var ScanFiles */
 	private $scanFiles;
 
-	public function setUp() {
+	protected function setUp(): void {
 		parent::setUp();
 
 		$this->config = $this->createMock(IConfig::class);

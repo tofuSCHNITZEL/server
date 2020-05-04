@@ -43,28 +43,28 @@ export default {
 	name: 'SharingEntrySimple',
 
 	components: {
-		Actions
+		Actions,
 	},
 
 	directives: {
-		Tooltip
+		Tooltip,
 	},
 
 	props: {
 		title: {
 			type: String,
 			default: '',
-			required: true
+			required: true,
 		},
 		tooltip: {
 			type: String,
-			default: ''
+			default: '',
 		},
 		subtitle: {
 			type: String,
-			default: ''
-		}
-	}
+			default: '',
+		},
+	},
 
 }
 </script>
@@ -73,7 +73,7 @@ export default {
 .sharing-entry {
 	display: flex;
 	align-items: center;
-	height: 44px;
+	min-height: 44px;
 	&__desc {
 		padding: 8px;
 		line-height: 1.2em;

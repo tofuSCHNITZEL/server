@@ -5,7 +5,9 @@ declare(strict_types=1);
 /**
  * @copyright 2019 Christoph Wurst <christoph@winzerhof-wurst.at>
  *
- * @author 2019 Christoph Wurst <christoph@winzerhof-wurst.at>
+ * @author Arthur Schiwon <blizzz@arthur-schiwon.de>
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
+ * @author Roeland Jago Douma <roeland@famdouma.nl>
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -20,14 +22,15 @@ declare(strict_types=1);
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ *
  */
 
 namespace OC\EventDispatcher;
 
-use OCP\ILogger;
 use function is_callable;
 use OCP\EventDispatcher\Event;
+use OCP\ILogger;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
@@ -60,7 +63,7 @@ class SymfonyAdapter implements EventDispatcherInterface {
 			$this->eventDispatcher->dispatch($eventName, $event);
 		} else {
 			// Legacy event
-			$this->logger->info(
+			$this->logger->debug(
 				'Deprecated event type for {name}: {class}',
 				[ 'name' => $eventName, 'class' => is_object($event) ? get_class($event) : 'null' ]
 			);

@@ -1,11 +1,14 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * @copyright Copyright (c) 2019, Thomas Citharel
  * @copyright Copyright (c) 2019, Georg Ehrke
  *
- * @author Thomas Citharel <tcit@tcit.fr>
  * @author Georg Ehrke <oc.list@georgehrke.com>
+ * @author Roeland Jago Douma <roeland@famdouma.nl>
+ * @author Thomas Citharel <tcit@tcit.fr>
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -20,20 +23,21 @@ declare(strict_types=1);
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  */
+
 namespace OCA\DAV\CalDAV\Reminder\NotificationProvider;
 
 use OCA\DAV\AppInfo\Application;
+use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IConfig;
 use OCP\ILogger;
 use OCP\IURLGenerator;
+use OCP\IUser;
 use OCP\L10N\IFactory as L10NFactory;
 use OCP\Notification\IManager;
-use OCP\IUser;
 use OCP\Notification\INotification;
-use OCP\AppFramework\Utility\ITimeFactory;
 use Sabre\VObject\Component\VEvent;
 use Sabre\VObject\Property;
 
@@ -89,6 +93,9 @@ class PushProvider extends AbstractProvider {
 
 		$eventDetails = $this->extractEventDetails($vevent);
 		$eventDetails['calendar_displayname'] = $calendarDisplayName;
+		$eventUUID = (string) $vevent->UID;
+		// Empty Notification ObjectId will be catched by OC\Notification\Notification
+		$eventUUIDHash = $eventUUID ? hash('sha256', $eventUUID, false) : '';
 
 		foreach($users as $user) {
 			/** @var INotification $notification */
@@ -96,7 +103,7 @@ class PushProvider extends AbstractProvider {
 			$notification->setApp(Application::APP_ID)
 				->setUser($user->getUID())
 				->setDateTime($this->timeFactory->getDateTime())
-				->setObject(Application::APP_ID, (string) $vevent->UID)
+				->setObject(Application::APP_ID, $eventUUIDHash)
 				->setSubject('calendar_reminder', [
 					'title' => $eventDetails['title'],
 					'start_atom' => $eventDetails['start_atom']

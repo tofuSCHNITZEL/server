@@ -8,7 +8,7 @@
  * @copyright Copyright (c) 2016, Christoph Wurst <christoph@winzerhof-wurst.at>
  * @copyright Copyright (c) 2016, Raghu Nayyar <hey@raghunayyar.com>
  * @copyright Copyright (c) 2011-2017, Jan-Christoph Borchardt <hey@jancborchardt.net>
- * @copyright Copyright (c) 2019, Gary Kim <gary@garykim.dev>
+ * @copyright Copyright (c) 2019-2020, Gary Kim <gary@garykim.dev>
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -87,6 +87,7 @@ ul {
 
 body {
 	background-color: var(--color-main-background);
+	background-color: linear-gradient(40deg, var(--color-main-background) 0%, rgba(28,175,255,1) 100%);
 	font-weight: normal;
 	/* bring the default font size up to 14px */
 	font-size: .875em;
@@ -123,6 +124,7 @@ body {
 	position: fixed;
 	top: 0;
 	bottom: 0;
+	left: 0;
 	height: 100%;
 	width: 100%;
 	z-index: 9000;
@@ -181,7 +183,7 @@ body {
 	padding: 0;
 	margin: 0;
 	background-color: var(--color-main-background-translucent);
-	z-index: 60;
+	z-index: 61; /* must be above the filelist sticky header */
 	-webkit-user-select: none;
 	-moz-user-select: none;
 	-ms-user-select: none;
@@ -406,7 +408,7 @@ body {
 .avatar, .avatardiv {
 	border-radius: 50%;
 	flex-shrink: 0;
-	img {
+	&> img {
 		border-radius: 50%;
 		flex-shrink: 0;
 	}
@@ -989,16 +991,12 @@ span.ui-icon {
 	}
 }
 
-#contactsmenu > .menu {
-	/* show ~4.5 entries */
-	height: 278px;
+#header .header-right > div#contactsmenu > .menu {
+	/* show 2.5 to 4.5 entries depending on the screen height */
+	height: calc(100vh - 50px * 3);
+	max-height: calc(50px * 4.5 + 50px);
+	min-height: calc(50px * 3.5);
 	width: 350px;
-	max-width: 90%;
-	right: 13px;
-
-	&::after {
-		right: 61px;
-	}
 
 	.emptycontent {
 		margin-top: 5vh !important;
@@ -1010,8 +1008,10 @@ span.ui-icon {
 	}
 
 	.content {
-		max-height: calc(100% - #{$header-height});
-		height: 100%;
+		/* fixed max height of the parent container without the search input */
+		height: calc(100vh - 50px * 3 - 50px);
+		max-height: calc(50px * 4.5);
+		min-height: calc(50px * 3.5 - 50px);
 		overflow-y: auto;
 
 		.footer {

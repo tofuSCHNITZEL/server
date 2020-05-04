@@ -5,13 +5,19 @@
  *
  * @author Arthur Schiwon <blizzz@arthur-schiwon.de>
  * @author Bjoern Schiessle <bjoern@schiessle.org>
+ * @author Daniel Kesselberg <mail@danielkesselberg.de>
+ * @author Guillaume COMPAGNON <gcompagnon@outlook.com>
  * @author Jan-Christoph Borchardt <hey@jancborchardt.net>
  * @author Joachim Bauch <bauch@struktur.de>
  * @author Joas Schilling <coding@schilljs.com>
+ * @author John Molakvoæ (skjnldsv) <skjnldsv@protonmail.com>
  * @author Julius Haertl <jus@bitgrid.net>
  * @author Julius Härtl <jus@bitgrid.net>
  * @author Lukas Reschke <lukas@statuscode.ch>
+ * @author Michael Weimann <mail@michael-weimann.eu>
  * @author Morris Jobke <hey@morrisjobke.de>
+ * @author Patrik Kernstock <info@pkern.at>
+ * @author Robin Appelman <robin@icewind.nl>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  *
  * @license GNU AGPL version 3 or any later version
@@ -27,7 +33,7 @@
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  */
 
@@ -139,8 +145,8 @@ class ThemingDefaults extends \OC_Defaults {
 		return $this->config->getAppValue('theming', 'url', $this->url);
 	}
 
-	public function getSlogan() {
-		return \OCP\Util::sanitizeHTML($this->config->getAppValue('theming', 'slogan', parent::getSlogan()));
+	public function getSlogan(?string $lang = null) {
+		return \OCP\Util::sanitizeHTML($this->config->getAppValue('theming', 'slogan', parent::getSlogan($lang)));
 	}
 
 	public function getImprintUrl() {
@@ -287,8 +293,8 @@ class ThemingDefaults extends \OC_Defaults {
 		];
 
 		$variables['image-logo'] = "url('".$this->imageManager->getImageUrl('logo')."')";
-		$variables['image-logoheader'] = "'".$this->imageManager->getImageUrl('logoheader')."'";
-		$variables['image-favicon'] = "'".$this->imageManager->getImageUrl('favicon')."'";
+		$variables['image-logoheader'] = "url('".$this->imageManager->getImageUrl('logoheader')."')";
+		$variables['image-favicon'] = "url('".$this->imageManager->getImageUrl('favicon')."')";
 		$variables['image-login-background'] = "url('".$this->imageManager->getImageUrl('background')."')";
 		$variables['image-login-plain'] = 'false';
 
@@ -335,7 +341,7 @@ class ThemingDefaults extends \OC_Defaults {
 		if ($image === 'favicon.ico' && ($customFavicon !== null || $this->imageManager->shouldReplaceIcons())) {
 			$route = $this->urlGenerator->linkToRoute('theming.Icon.getFavicon', ['app' => $app]);
 		}
-		if ($image === 'favicon-touch.png' && ($customFavicon !== null || $this->imageManager->shouldReplaceIcons())) {
+		if (($image === 'favicon-touch.png' || $image === 'favicon-fb.png') && ($customFavicon !== null || $this->imageManager->shouldReplaceIcons())) {
 			$route = $this->urlGenerator->linkToRoute('theming.Icon.getTouchIcon', ['app' => $app]);
 		}
 		if ($image === 'manifest.json') {

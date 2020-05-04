@@ -24,6 +24,15 @@
 	<div id="app-content-inner">
 		<div id="apps-list" class="apps-list" :class="{installed: (useBundleView || useListView), store: useAppStoreView}">
 			<template v-if="useListView">
+				<div v-if="showUpdateAll" class="counter">
+					{{ t('settings', '{counter} apps have an update available', {counter}) }}
+					<button v-if="showUpdateAll"
+						id="app-list-update-all"
+						class="primary"
+						@click="updateAll">
+						{{ t('settings', 'Update all') }}
+					</button>
+				</div>
 				<transition-group name="app-list" tag="div" class="apps-list-container">
 					<AppItem v-for="app in apps"
 						:key="app.id"
@@ -91,20 +100,30 @@
 <script>
 import AppItem from './AppList/AppItem'
 import PrefixMixin from './PrefixMixin'
+import pLimit from 'p-limit'
 
 export default {
 	name: 'AppList',
 	components: {
-		AppItem
+		AppItem,
 	},
 	mixins: [PrefixMixin],
 	props: ['category', 'app', 'search'],
 	computed: {
+		counter() {
+			return this.apps.filter(app => app.update).length
+		},
 		loading() {
 			return this.$store.getters.loading('list')
 		},
+		hasPendingUpdate() {
+			return this.apps.filter(app => app.update).length > 1
+		},
+		showUpdateAll() {
+			return this.hasPendingUpdate && ['installed', 'updates'].includes(this.category)
+		},
 		apps() {
-			let apps = this.$store.getters.getAllApps
+			const apps = this.$store.getters.getAllApps
 				.filter(app => app.name.toLowerCase().search(this.search.toLowerCase()) !== -1)
 				.sort(function(a, b) {
 					const sortStringA = '' + (a.active ? 0 : 1) + (a.update ? 0 : 1) + a.name
@@ -139,7 +158,9 @@ export default {
 		bundleApps() {
 			return function(bundle) {
 				return this.$store.getters.getAllApps
-					.filter(app => app.bundleId === bundle)
+					.filter(app => {
+						return app.bundleIds !== undefined && app.bundleIds.includes(bundle)
+					})
 			}
 		},
 		searchApps() {
@@ -164,20 +185,20 @@ export default {
 			return (this.category === 'app-bundles')
 		},
 		allBundlesEnabled() {
-			let self = this
+			const self = this
 			return function(id) {
 				return self.bundleApps(id).filter(app => !app.active).length === 0
 			}
 		},
 		bundleToggleText() {
-			let self = this
+			const self = this
 			return function(id) {
 				if (self.allBundlesEnabled(id)) {
 					return t('settings', 'Disable all')
 				}
 				return t('settings', 'Enable all')
 			}
-		}
+		},
 	},
 	methods: {
 		toggleBundle(id) {
@@ -187,15 +208,27 @@ export default {
 			return this.enableBundle(id)
 		},
 		enableBundle(id) {
-			let apps = this.bundleApps(id).map(app => app.id)
+			const apps = this.bundleApps(id).map(app => app.id)
 			this.$store.dispatch('enableApp', { appId: apps, groups: [] })
-				.catch((error) => { console.error(error); OC.Notification.show(error) })
+				.catch((error) => {
+					console.error(error)
+					OC.Notification.show(error)
+				})
 		},
 		disableBundle(id) {
-			let apps = this.bundleApps(id).map(app => app.id)
+			const apps = this.bundleApps(id).map(app => app.id)
 			this.$store.dispatch('disableApp', { appId: apps, groups: [] })
-				.catch((error) => { OC.Notification.show(error) })
-		}
-	}
+				.catch((error) => {
+					OC.Notification.show(error)
+				})
+		},
+		updateAll() {
+			const limit = pLimit(1)
+			this.apps
+				.filter(app => app.update)
+				.map(app => limit(() => this.$store.dispatch('updateApp', { appId: app.id }))
+				)
+		},
+	},
 }
 </script>

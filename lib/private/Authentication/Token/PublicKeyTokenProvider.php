@@ -1,23 +1,29 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * @copyright Copyright 2018, Roeland Jago Douma <roeland@famdouma.nl>
  *
+ * @author Daniel Kesselberg <mail@danielkesselberg.de>
+ * @author Joas Schilling <coding@schilljs.com>
+ * @author Morris Jobke <hey@morrisjobke.de>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  *
- * @license AGPL-3.0
+ * @license GNU AGPL version 3 or any later version
  *
- * This code is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License, version 3,
- * as published by the Free Software Foundation.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License, version 3,
- * along with this program.  If not, see <http://www.gnu.org/licenses/>
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  */
 
@@ -25,6 +31,7 @@ namespace OC\Authentication\Token;
 
 use OC\Authentication\Exceptions\ExpiredTokenException;
 use OC\Authentication\Exceptions\InvalidTokenException;
+use OC\Authentication\Exceptions\TokenPasswordExpiredException;
 use OC\Authentication\Exceptions\PasswordlessTokenException;
 use OC\Authentication\Exceptions\WipeTokenException;
 use OC\Cache\CappedMemoryCache;
@@ -108,6 +115,11 @@ class PublicKeyTokenProvider implements IProvider {
 			throw new WipeTokenException($token);
 		}
 
+		if ($token->getPasswordInvalid() === true) {
+			//The password is invalid we should throw an TokenPasswordExpiredException
+			throw new TokenPasswordExpiredException($token);
+		}
+
 		return $token;
 	}
 
@@ -124,6 +136,11 @@ class PublicKeyTokenProvider implements IProvider {
 
 		if ($token->getType() === IToken::WIPE_TOKEN) {
 			throw new WipeTokenException($token);
+		}
+
+		if ($token->getPasswordInvalid() === true) {
+			//The password is invalid we should throw an TokenPasswordExpiredException
+			throw new TokenPasswordExpiredException($token);
 		}
 
 		return $token;

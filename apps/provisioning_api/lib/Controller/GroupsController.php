@@ -1,14 +1,18 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * @copyright Copyright (c) 2016, ownCloud, Inc.
  *
+ * @author Arthur Schiwon <blizzz@arthur-schiwon.de>
  * @author Joas Schilling <coding@schilljs.com>
+ * @author John Molakvoæ (skjnldsv) <skjnldsv@protonmail.com>
  * @author Lukas Reschke <lukas@statuscode.ch>
  * @author Morris Jobke <hey@morrisjobke.de>
+ * @author Robin Appelman <robin@icewind.nl>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  * @author Tom Needham <tom@owncloud.com>
- * @author John Molakvoæ <skjnldsv@protonmail.com>
  *
  * @license AGPL-3.0
  *
@@ -22,7 +26,7 @@ declare(strict_types=1);
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License, version 3,
- * along with this program.  If not, see <http://www.gnu.org/licenses/>
+ * along with this program. If not, see <http://www.gnu.org/licenses/>
  *
  */
 
@@ -31,16 +35,16 @@ namespace OCA\Provisioning_API\Controller;
 use OC\Accounts\AccountManager;
 use OCP\AppFramework\Http\DataResponse;
 use OCP\AppFramework\OCS\OCSException;
-use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\AppFramework\OCS\OCSForbiddenException;
+use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IConfig;
 use OCP\IGroup;
 use OCP\IGroupManager;
 use OCP\ILogger;
 use OCP\IRequest;
+use OCP\IUser;
 use OCP\IUserManager;
 use OCP\IUserSession;
-use OCP\IUser;
 
 class GroupsController extends AUserData {
 
@@ -147,6 +151,8 @@ class GroupsController extends AUserData {
 	 * @throws OCSException
 	 */
 	public function getGroupUsers(string $groupId): DataResponse {
+		$groupId = urldecode($groupId);
+
 		$user = $this->userSession->getUser();
 		$isSubadminOfGroup = false;
 
@@ -186,6 +192,7 @@ class GroupsController extends AUserData {
 	 * @throws OCSException
 	 */
 	public function getGroupUsersDetails(string $groupId, string $search = '', int $limit = null, int $offset = 0): DataResponse {
+		$groupId = urldecode($groupId);
 		$currentUser = $this->userSession->getUser();
 
 		// Check the group exists
@@ -258,6 +265,8 @@ class GroupsController extends AUserData {
 	 * @throws OCSException
 	 */
 	public function updateGroup(string $groupId, string $key, string $value): DataResponse {
+		$groupId = urldecode($groupId);
+
 		if ($key === 'displayname') {
 			$group = $this->groupManager->get($groupId);
 			if ($group->setDisplayName($value)) {
@@ -278,6 +287,8 @@ class GroupsController extends AUserData {
 	 * @throws OCSException
 	 */
 	public function deleteGroup(string $groupId): DataResponse {
+		$groupId = urldecode($groupId);
+
 		// Check it exists
 		if(!$this->groupManager->groupExists($groupId)){
 			throw new OCSException('', 101);

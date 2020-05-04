@@ -21,11 +21,13 @@
 
 namespace OCA\WorkflowEngine\AppInfo;
 
+use OCA\WorkflowEngine\Controller\RequestTime;
+use OCA\WorkflowEngine\Helper\LogContext;
 use OCA\WorkflowEngine\Manager;
+use OCA\WorkflowEngine\Service\Logger;
 use OCP\AppFramework\QueryException;
 use OCP\EventDispatcher\Event;
 use OCP\Template;
-use OCA\WorkflowEngine\Controller\RequestTime;
 use OCP\WorkflowEngine\IEntity;
 use OCP\WorkflowEngine\IEntityCompat;
 use OCP\WorkflowEngine\IOperation;
@@ -62,10 +64,6 @@ class Application extends \OCP\AppFramework\App {
 					class_exists(Template::class, true);
 				}
 
-				style(self::APP_ID, [
-					'admin',
-				]);
-
 				script('core', [
 					'files/fileinfo',
 					'files/client',
@@ -98,6 +96,19 @@ class Application extends \OCP\AppFramework\App {
 								/** @var IOperation $operation */
 								$operation = $this->getContainer()->query($operationClass);
 
+								$ruleMatcher->setEntity($entity);
+								$ruleMatcher->setOperation($operation);
+
+								$ctx = new LogContext();
+								$ctx
+									->setOperation($operation)
+									->setEntity($entity)
+									->setEventName($eventName);
+
+								/** @var Logger $flowLogger */
+								$flowLogger = $this->getContainer()->query(Logger::class);
+								$flowLogger->logEventInit($ctx);
+
 								if ($event instanceof Event) {
 									$entity->prepareRuleMatcher($ruleMatcher, $eventName, $event);
 									$operation->onEvent($eventName, $event, $ruleMatcher);
@@ -107,7 +118,7 @@ class Application extends \OCP\AppFramework\App {
 									$operation->onEventCompat($eventName, $event, $ruleMatcher);
 								} else {
 									$logger = $this->getContainer()->getServer()->getLogger();
-									$logger->warning(
+									$logger->debug(
 										'Cannot handle event {name} of {event} against entity {entity} and operation {operation}',
 										[
 											'app' => self::APP_ID,
@@ -118,14 +129,17 @@ class Application extends \OCP\AppFramework\App {
 										]
 									);
 								}
+								$flowLogger->logEventDone($ctx);
 
 							} catch (QueryException $e) {
 								// Ignore query exceptions since they might occur when an entity/operation were setup before by an app that is disabled now
 							}
 						}
 					);
-				}, $eventNames);
+				}, $eventNames ?? []);
 			}
 		}
+
+
 	}
 }

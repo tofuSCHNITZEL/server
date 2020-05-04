@@ -121,7 +121,7 @@
 			class="sharing-entry__actions"
 			menu-align="right"
 			:open.sync="open"
-			@close="onPasswordSubmit">
+			@close="onMenuClose">
 			<template v-if="share">
 				<template v-if="share.canEdit">
 					<!-- folder -->
@@ -195,6 +195,15 @@
 						{{ t('files_sharing', 'Enter a password') }}
 					</ActionInput>
 
+					<!-- password protected by Talk -->
+					<ActionCheckbox v-if="isPasswordProtectedByTalkAvailable"
+						:checked.sync="isPasswordProtectedByTalk"
+						:disabled="saving"
+						class="share-link-password-talk-checkbox"
+						@change="queueUpdate('sendPasswordByTalk')">
+						{{ t('files_sharing', 'Video verification') }}
+					</ActionCheckbox>
+
 					<!-- expiration date -->
 					<ActionCheckbox :checked.sync="hasExpirationDate"
 						:disabled="config.isDefaultExpireDateEnforced || saving"
@@ -242,9 +251,11 @@
 						}"
 						:class="{ error: errors.note}"
 						:disabled="saving"
-						:value.sync="share.note"
+						:placeholder="t('files_sharing', 'Enter a note for the share recipient')"
+						:value="share.newNote || share.note"
 						icon="icon-edit"
-						@update:value="debounceQueueUpdate('note')" />
+						@update:value="onNoteChange"
+						@submit="onNoteSubmit" />
 				</template>
 
 				<!-- external sharing via url (social...) -->
@@ -257,10 +268,10 @@
 				</ActionLink>
 
 				<ActionButton v-if="share.canDelete"
-					icon="icon-delete"
+					icon="icon-close"
 					:disabled="saving"
 					@click.prevent="onDelete">
-					{{ t('files_sharing', 'Delete share') }}
+					{{ t('files_sharing', 'Unshare') }}
 				</ActionButton>
 				<ActionButton v-if="!isEmailShareType && canReshare"
 					class="new-share-link"
@@ -316,11 +327,11 @@ export default {
 		ActionLink,
 		ActionText,
 		ActionTextEditable,
-		Avatar
+		Avatar,
 	},
 
 	directives: {
-		Tooltip
+		Tooltip,
 	},
 
 	mixins: [SharesMixin],
@@ -328,8 +339,8 @@ export default {
 	props: {
 		canReshare: {
 			type: Boolean,
-			default: true
-		}
+			default: true,
+		},
 	},
 
 	data() {
@@ -341,7 +352,7 @@ export default {
 			publicUploadRValue: OC.PERMISSION_READ,
 			publicUploadWValue: OC.PERMISSION_CREATE,
 
-			ExternalLinkActions: OCA.Sharing.ExternalLinkActions.state
+			ExternalLinkActions: OCA.Sharing.ExternalLinkActions.state,
 		}
 	},
 
@@ -366,7 +377,7 @@ export default {
 			if (this.share && this.share.id) {
 				if (!this.isShareOwner && this.share.ownerDisplayName) {
 					return t('files_sharing', 'Shared via link by {initiator}', {
-						initiator: this.share.ownerDisplayName
+						initiator: this.share.ownerDisplayName,
 					})
 				}
 				if (this.share.label && this.share.label.trim() !== '') {
@@ -377,6 +388,28 @@ export default {
 				}
 			}
 			return t('files_sharing', 'Share link')
+		},
+
+		/**
+		 * Does the current share have an expiration date
+		 * @returns {boolean}
+		 */
+		hasExpirationDate: {
+			get: function() {
+				return this.config.isDefaultExpireDateEnforced || !!this.share.expireDate
+			},
+			set: function(enabled) {
+				this.share.expireDate = enabled
+					? this.config.defaultExpirationDateString !== ''
+						? this.config.defaultExpirationDateString
+						: moment().format('YYYY-MM-DD')
+					: ''
+			},
+		},
+
+		dateMaxEnforced() {
+			return this.config.isDefaultExpireDateEnforced
+				&& moment().add(1 + this.config.defaultExpireDate, 'days')
 		},
 
 		/**
@@ -392,7 +425,36 @@ export default {
 				// TODO: directly save after generation to make sure the share is always protected
 				this.share.password = enabled ? await this.generatePassword() : ''
 				this.share.newPassword = this.share.password
-			}
+			},
+		},
+
+		/**
+		 * Is Talk enabled?
+		 * @returns {boolean}
+		 */
+		isTalkEnabled() {
+			return OC.appswebroots['spreed'] !== undefined
+		},
+
+		/**
+		 * Is it possible to protect the password by Talk?
+		 * @returns {boolean}
+		 */
+		isPasswordProtectedByTalkAvailable() {
+			return this.isPasswordProtected && this.isTalkEnabled
+		},
+
+		/**
+		 * Is the current share password protected by Talk?
+		 * @returns {boolean}
+		 */
+		isPasswordProtectedByTalk: {
+			get: function() {
+				return this.share.sendPasswordByTalk
+			},
+			set: async function(enabled) {
+				this.share.sendPasswordByTalk = enabled
+			},
 		},
 
 		/**
@@ -430,7 +492,7 @@ export default {
 				this.share.permissions = enabled
 					? OC.PERMISSION_READ | OC.PERMISSION_UPDATE
 					: OC.PERMISSION_READ
-			}
+			},
 		},
 
 		// if newPassword exists, but is empty, it means
@@ -488,7 +550,7 @@ export default {
 
 		isPasswordPolicyEnabled() {
 			return typeof this.config.passwordPolicy === 'object'
-		}
+		},
 	},
 
 	methods: {
@@ -497,7 +559,7 @@ export default {
 		 */
 		async onNewLinkShare() {
 			const shareDefaults = {
-				share_type: OC.Share.SHARE_TYPE_LINK
+				share_type: OC.Share.SHARE_TYPE_LINK,
 			}
 			if (this.config.isDefaultExpireDateEnforced) {
 				// default is empty string if not set
@@ -566,7 +628,7 @@ export default {
 					path,
 					shareType: OC.Share.SHARE_TYPE_LINK,
 					password: share.password,
-					expireDate: share.expireDate
+					expireDate: share.expireDate,
 					// we do not allow setting the publicUpload
 					// before the share creation.
 					// Todo: We also need to fix the createShare method in
@@ -711,9 +773,17 @@ export default {
 		 */
 		onPasswordSubmit() {
 			if (this.hasUnsavedPassword) {
-				this.share.password = this.share.newPassword
+				this.share.password = this.share.newPassword.trim()
 				this.queueUpdate('password')
 			}
+		},
+
+		/**
+		 * Save potential changed data on menu close
+		 */
+		onMenuClose() {
+			this.onPasswordSubmit()
+			this.onNoteSubmit()
 		},
 
 		/**
@@ -725,8 +795,8 @@ export default {
 			// but is incomplete as not pushed to server
 			// YET. We can safely delete the share :)
 			this.$emit('remove:share', this.share)
-		}
-	}
+		},
+	},
 
 }
 </script>
@@ -735,7 +805,7 @@ export default {
 .sharing-entry {
 	display: flex;
 	align-items: center;
-	height: 44px;
+	min-height: 44px;
 	&__desc {
 		display: flex;
 		flex-direction: column;

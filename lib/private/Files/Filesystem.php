@@ -5,6 +5,7 @@
  * @author Arthur Schiwon <blizzz@arthur-schiwon.de>
  * @author Bart Visscher <bartv@thisnet.nl>
  * @author Christopher Schäpers <kondou@ts.unde.re>
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
  * @author Florin Peter <github@florin-peter.de>
  * @author Joas Schilling <coding@schilljs.com>
  * @author Jörn Friedrich Dreyer <jfd@butonic.de>
@@ -30,7 +31,7 @@
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License, version 3,
- * along with this program.  If not, see <http://www.gnu.org/licenses/>
+ * along with this program. If not, see <http://www.gnu.org/licenses/>
  *
  */
 
@@ -828,7 +829,7 @@ class Filesystem {
 		$patterns = [
 			'/\\\\/s',          // no windows style slashes
 			'/\/\.(\/\.)?\//s', // remove '/./'
-			'/\/{2,}/s',        // remove squence of slashes
+			'/\/{2,}/s',        // remove sequence of slashes
 			'/\/\.$/s',         // remove trailing /.
 		];
 

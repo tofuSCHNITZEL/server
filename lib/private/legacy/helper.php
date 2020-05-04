@@ -6,16 +6,15 @@
  * @author Arthur Schiwon <blizzz@arthur-schiwon.de>
  * @author Bart Visscher <bartv@thisnet.nl>
  * @author Björn Schießle <bjoern@schiessle.org>
- * @author Christopher Schäpers <kondou@ts.unde.re>
  * @author Clark Tomlinson <fallen013@gmail.com>
- * @author Fabian Henze <flyser42@gmx.de>
+ * @author Daniel Kesselberg <mail@danielkesselberg.de>
  * @author Felix Moeller <mail@felixmoeller.de>
  * @author Jakob Sack <mail@jakobsack.de>
  * @author Jan-Christoph Borchardt <hey@jancborchardt.net>
  * @author Joas Schilling <coding@schilljs.com>
  * @author Jörn Friedrich Dreyer <jfd@butonic.de>
+ * @author Julius Härtl <jus@bitgrid.net>
  * @author Lukas Reschke <lukas@statuscode.ch>
- * @author Michael Gapczynski <GapczynskiM@gmail.com>
  * @author Morris Jobke <hey@morrisjobke.de>
  * @author Olivier Paroz <github@oparoz.com>
  * @author Pellaeon Lin <nfsmwlin@gmail.com>
@@ -40,9 +39,11 @@
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License, version 3,
- * along with this program.  If not, see <http://www.gnu.org/licenses/>
+ * along with this program. If not, see <http://www.gnu.org/licenses/>
  *
  */
+
+use OCP\IUser;
 use Symfony\Component\Process\ExecutableFinder;
 
 /**
@@ -504,19 +505,14 @@ class OC_Helper {
 				|| $storage->instanceOfStorage('\OC\Files\ObjectStore\HomeObjectStoreStorage')
 			) {
 				/** @var \OC\Files\Storage\Home $storage */
-				$userInstance = $storage->getUser();
-				$user = ($userInstance === null) ? null : $userInstance->getUID();
+				$user = $storage->getUser();
 			} else {
-				$user = \OC::$server->getUserSession()->getUser()->getUID();
+				$user = \OC::$server->getUserSession()->getUser();
 			}
-			if ($user) {
-				$quota = OC_Util::getUserQuota($user);
-			} else {
-				$quota = \OCP\Files\FileInfo::SPACE_UNLIMITED;
-			}
+			$quota = OC_Util::getUserQuota($user);
 			if ($quota !== \OCP\Files\FileInfo::SPACE_UNLIMITED) {
 				// always get free space / total space from root + mount points
-				return self::getGlobalStorageInfo();
+				return self::getGlobalStorageInfo($quota);
 			}
 		}
 
@@ -562,11 +558,10 @@ class OC_Helper {
 	/**
 	 * Get storage info including all mount points and quota
 	 *
+	 * @param int $quota
 	 * @return array
 	 */
-	private static function getGlobalStorageInfo() {
-		$quota = OC_Util::getUserQuota(\OCP\User::getUser());
-
+	private static function getGlobalStorageInfo($quota) {
 		$rootInfo = \OC\Files\Filesystem::getFileInfo('', 'ext');
 		$used = $rootInfo['size'];
 		if ($used < 0) {

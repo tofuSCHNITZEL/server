@@ -2,8 +2,13 @@
 /**
  *
  *
+ * @author Arthur Schiwon <blizzz@arthur-schiwon.de>
+ * @author Daniel Calviño Sánchez <danxuliu@gmail.com>
  * @author Joas Schilling <coding@schilljs.com>
+ * @author John Molakvoæ (skjnldsv) <skjnldsv@protonmail.com>
+ * @author Julius Härtl <jus@bitgrid.net>
  * @author Lukas Reschke <lukas@statuscode.ch>
+ * @author Robin Appelman <robin@icewind.nl>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  * @author Sergio Bertolin <sbertolin@solidgear.es>
  * @author Sergio Bertolín <sbertolin@solidgear.es>
@@ -22,7 +27,7 @@
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  */
 use Behat\Gherkin\Node\TableNode;
@@ -109,6 +114,39 @@ trait Sharing {
 	 */
 	public function creatingShare($body) {
 		$this->asCreatingAShareWith($this->currentUser, $body);
+	}
+
+	/**
+	 * @When /^accepting last share$/
+	 */
+	public function acceptingLastShare() {
+		$share_id = $this->lastShareData->data[0]->id;
+		$url = "/apps/files_sharing/api/v{$this->sharingApiVersion}/shares/pending/$share_id";
+		$this->sendingToWith("POST", $url, null);
+
+		$this->theHTTPStatusCodeShouldBe('200');
+	}
+
+	/**
+	 * @When /^user "([^"]*)" accepts last share$/
+	 *
+	 * @param string $user
+	 */
+	public function userAcceptsLastShare(string $user) {
+		// "As userXXX" and "user userXXX accepts last share" steps are not
+		// expected to be used in the same scenario, but restore the user just
+		// in case.
+		$previousUser = $this->currentUser;
+
+		$this->currentUser = $user;
+
+		$share_id = $this->lastShareData->data[0]->id;
+		$url = "/apps/files_sharing/api/v{$this->sharingApiVersion}/shares/pending/$share_id";
+		$this->sendingToWith("POST", $url, null);
+
+		$this->currentUser = $previousUser;
+
+		$this->theHTTPStatusCodeShouldBe('200');
 	}
 
 	/**

@@ -36,12 +36,12 @@ export default {
 		fileInfo: {
 			type: Object,
 			default: () => {},
-			required: true
+			required: true,
 		},
 		share: {
 			type: Share,
-			default: null
-		}
+			default: null,
+		},
 	},
 
 	data() {
@@ -75,29 +75,12 @@ export default {
 				SHARE_TYPE_CIRCLE: OC.Share.SHARE_TYPE_CIRCLE,
 				SHARE_TYPE_GUEST: OC.Share.SHARE_TYPE_GUEST,
 				SHARE_TYPE_REMOTE_GROUP: OC.Share.SHARE_TYPE_REMOTE_GROUP,
-				SHARE_TYPE_ROOM: OC.Share.SHARE_TYPE_ROOM
-			}
+				SHARE_TYPE_ROOM: OC.Share.SHARE_TYPE_ROOM,
+			},
 		}
 	},
 
 	computed: {
-
-		/**
-		 * Does the current share have an expiration date
-		 * @returns {boolean}
-		 */
-		hasExpirationDate: {
-			get: function() {
-				return this.config.isDefaultExpireDateEnforced || !!this.share.expireDate
-			},
-			set: function(enabled) {
-				this.share.expireDate = enabled
-					? this.config.defaultExpirationDateString !== ''
-						? this.config.defaultExpirationDateString
-						: moment().format('YYYY-MM-DD')
-					: ''
-			}
-		},
 
 		/**
 		 * Does the current share have a note
@@ -105,22 +88,17 @@ export default {
 		 */
 		hasNote: {
 			get: function() {
-				return !!this.share.note
+				return this.share.note !== ''
 			},
 			set: function(enabled) {
 				this.share.note = enabled
-					? t('files_sharing', 'Enter a note for the share recipient')
-					: ''
-			}
+					? null // enabled but user did not changed the content yet
+					: '' // empty = no note = disabled
+			},
 		},
 
 		dateTomorrow() {
 			return moment().add(1, 'days')
-		},
-
-		dateMaxEnforced() {
-			return this.config.isDefaultExpireDateEnforced
-				&& moment().add(1 + this.config.defaultExpireDate, 'days')
 		},
 
 		/**
@@ -139,20 +117,20 @@ export default {
 			// fallback to default in case of unavailable data
 			return {
 				days: window.dayNamesShort
-					? window.dayNamesShort			// provided by nextcloud
+					? window.dayNamesShort // provided by nextcloud
 					: ['Sun.', 'Mon.', 'Tue.', 'Wed.', 'Thu.', 'Fri.', 'Sat.'],
 				months: window.monthNamesShort
-					? window.monthNamesShort		// provided by nextcloud
+					? window.monthNamesShort // provided by nextcloud
 					: ['Jan.', 'Feb.', 'Mar.', 'Apr.', 'May.', 'Jun.', 'Jul.', 'Aug.', 'Sep.', 'Oct.', 'Nov.', 'Dec.'],
 				placeholder: {
-					date: 'Select Date' // TODO: Translate
-				}
+					date: 'Select Date', // TODO: Translate
+				},
 			}
 		},
 
 		isShareOwner() {
 			return this.share && this.share.owner === getCurrentUser().uid
-		}
+		},
 
 	},
 
@@ -205,6 +183,27 @@ export default {
 		},
 
 		/**
+		 * Note changed, let's save it to a different key
+		 * @param {String} note the share note
+		 */
+		onNoteChange(note) {
+			this.$set(this.share, 'newNote', note.trim())
+		},
+
+		/**
+		 * When the note change, we trim, save and dispatch
+		 *
+		 * @param {string} note the note
+		 */
+		onNoteSubmit() {
+			if (this.share.newNote) {
+				this.share.note = this.share.newNote
+				this.$delete(this.share, 'newNote')
+				this.queueUpdate('note')
+			}
+		},
+
+		/**
 		 * Delete share button handler
 		 */
 		async onDelete() {
@@ -239,7 +238,7 @@ export default {
 					try {
 						await this.updateShare(this.share.id, {
 							property,
-							value
+							value,
 						})
 
 						// clear any previous errors
@@ -247,8 +246,10 @@ export default {
 
 						// reset password state after sync
 						this.$delete(this.share, 'newPassword')
-					} catch ({ property, message }) {
-						this.onSyncError(property, message)
+					} catch ({ message }) {
+						if (message && message !== '') {
+							this.onSyncError(property, message)
+						}
 					} finally {
 						this.saving = false
 					}
@@ -298,6 +299,6 @@ export default {
 		 */
 		debounceQueueUpdate: debounce(function(property) {
 			this.queueUpdate(property)
-		}, 500)
-	}
+		}, 500),
+	},
 }

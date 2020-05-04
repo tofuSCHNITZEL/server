@@ -6,6 +6,7 @@
  * @author Georg Ehrke <oc.list@georgehrke.com>
  * @author Joas Schilling <coding@schilljs.com>
  * @author Lukas Reschke <lukas@statuscode.ch>
+ * @author Morris Jobke <hey@morrisjobke.de>
  * @author nhirokinet <nhirokinet@nhiroki.net>
  * @author Robin Appelman <robin@icewind.nl>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
@@ -13,7 +14,6 @@
  * @author Thomas Citharel <tcit@tcit.fr>
  * @author Thomas Müller <thomas.mueller@tmit.eu>
  * @author Vinicius Cubas Brand <vinicius@eita.org.br>
- * @author Daniel Tygel <dtygel@eita.org.br>
  *
  * @license AGPL-3.0
  *
@@ -27,16 +27,17 @@
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License, version 3,
- * along with this program.  If not, see <http://www.gnu.org/licenses/>
+ * along with this program. If not, see <http://www.gnu.org/licenses/>
  *
  */
 
 namespace OCA\DAV\CalDAV;
 
-use OCA\DAV\DAV\Sharing\IShareable;
-use OCP\DB\QueryBuilder\IQueryBuilder;
+use DateTime;
 use OCA\DAV\Connector\Sabre\Principal;
 use OCA\DAV\DAV\Sharing\Backend;
+use OCA\DAV\DAV\Sharing\IShareable;
+use OCP\DB\QueryBuilder\IQueryBuilder;
 use OCP\IDBConnection;
 use OCP\IGroupManager;
 use OCP\ILogger;
@@ -53,6 +54,7 @@ use Sabre\DAV;
 use Sabre\DAV\Exception\Forbidden;
 use Sabre\DAV\Exception\NotFound;
 use Sabre\DAV\PropPatch;
+use Sabre\Uri;
 use Sabre\VObject\Component;
 use Sabre\VObject\Component\VCalendar;
 use Sabre\VObject\Component\VTimeZone;
@@ -62,7 +64,6 @@ use Sabre\VObject\ParseException;
 use Sabre\VObject\Property;
 use Sabre\VObject\Reader;
 use Sabre\VObject\Recur\EventIterator;
-use Sabre\Uri;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\EventDispatcher\GenericEvent;
 
@@ -445,7 +446,7 @@ class CalDavBackend extends AbstractBackend implements SyncSupport, Subscription
 
 		return $this->userDisplayNames[$uid];
 	}
-	
+
 	/**
 	 * @return array
 	 */
@@ -1238,7 +1239,9 @@ class CalDavBackend extends AbstractBackend implements SyncSupport, Subscription
 		$stmt = $this->db->prepare('DELETE FROM `*PREFIX*calendarobjects` WHERE `calendarid` = ? AND `uri` = ? AND `calendartype` = ?');
 		$stmt->execute([$calendarId, $objectUri, $calendarType]);
 
-		$this->purgeProperties($calendarId, $data['id'], $calendarType);
+		if (is_array($data)) {
+			$this->purgeProperties($calendarId, $data['id'], $calendarType);
+		}
 
 		$this->addChange($calendarId, $objectUri, 3, $calendarType);
 	}
@@ -1549,14 +1552,14 @@ class CalDavBackend extends AbstractBackend implements SyncSupport, Subscription
 			->from('calendarobjects', 'c');
 
 		if (isset($options['timerange'])) {
-			if (isset($options['timerange']['start'])) {
+			if (isset($options['timerange']['start']) && $options['timerange']['start'] instanceof DateTime) {
 				$outerQuery->andWhere($outerQuery->expr()->gt('lastoccurence',
-					$outerQuery->createNamedParameter($options['timerange']['start']->getTimeStamp)));
+					$outerQuery->createNamedParameter($options['timerange']['start']->getTimeStamp())));
 
 			}
-			if (isset($options['timerange']['end'])) {
+			if (isset($options['timerange']['end']) && $options['timerange']['end'] instanceof DateTime) {
 				$outerQuery->andWhere($outerQuery->expr()->lt('firstoccurence',
-					$outerQuery->createNamedParameter($options['timerange']['end']->getTimeStamp)));
+					$outerQuery->createNamedParameter($options['timerange']['end']->getTimeStamp())));
 			}
 		}
 
@@ -2256,7 +2259,7 @@ class CalDavBackend extends AbstractBackend implements SyncSupport, Subscription
 				}
 			} else {
 				$it = new EventIterator($vObject, (string)$component->UID);
-				$maxDate = new \DateTime(self::MAX_DATE);
+				$maxDate = new DateTime(self::MAX_DATE);
 				if ($it->isInfinite()) {
 					$lastOccurrence = $maxDate->getTimestamp();
 				} else {
@@ -2463,11 +2466,10 @@ class CalDavBackend extends AbstractBackend implements SyncSupport, Subscription
 							if ($this->db->supports4ByteText()) {
 								$value = preg_replace('/[\x{10000}-\x{10FFFF}]/u', "\xEF\xBF\xBD", $value);
 							}
-							$value = mb_substr($value, 0, 254);
 
 							$query->setParameter('name', $property->name);
-							$query->setParameter('parameter', substr($key, 0, 254));
-							$query->setParameter('value', substr($value, 0, 254));
+							$query->setParameter('parameter', mb_substr($key, 0, 254));
+							$query->setParameter('value', mb_substr($value, 0, 254));
 							$query->execute();
 						}
 					}

@@ -5,11 +5,16 @@
  * @author Arthur Schiwon <blizzz@arthur-schiwon.de>
  * @author Bjoern Schiessle <bjoern@schiessle.org>
  * @author Björn Schießle <bjoern@schiessle.org>
+ * @author Daniel Calviño Sánchez <danxuliu@gmail.com>
  * @author Georg Ehrke <oc.list@georgehrke.com>
  * @author Joas Schilling <coding@schilljs.com>
+ * @author John Molakvoæ (skjnldsv) <skjnldsv@protonmail.com>
  * @author Jonas Sulzer <jonas@violoncello.ch>
+ * @author Julius Härtl <jus@bitgrid.net>
  * @author Lukas Reschke <lukas@statuscode.ch>
+ * @author MartB <mart.b@outlook.de>
  * @author Maxence Lange <maxence@pontapreta.net>
+ * @author Michael Weimann <mail@michael-weimann.eu>
  * @author Morris Jobke <hey@morrisjobke.de>
  * @author Piotr Filiciak <piotr@filiciak.pl>
  * @author Robin Appelman <robin@icewind.nl>
@@ -30,41 +35,43 @@
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License, version 3,
- * along with this program.  If not, see <http://www.gnu.org/licenses/>
+ * along with this program. If not, see <http://www.gnu.org/licenses/>
  *
  */
 
 namespace OCA\Files_Sharing\Controller;
 
-use OC\Security\CSP\ContentSecurityPolicy;
 use OC_Files;
 use OC_Util;
+use OC\Security\CSP\ContentSecurityPolicy;
 use OCA\FederatedFileSharing\FederatedShareProvider;
+use OCA\Files_Sharing\Activity\Providers\Downloads;
+use OCA\Viewer\Event\LoadViewer;
 use OCP\AppFramework\AuthPublicShareController;
-use OCP\AppFramework\Http\Template\SimpleMenuAction;
+use OCP\AppFramework\Http\NotFoundResponse;
 use OCP\AppFramework\Http\Template\ExternalShareMenuAction;
 use OCP\AppFramework\Http\Template\LinkMenuAction;
 use OCP\AppFramework\Http\Template\PublicTemplateResponse;
-use OCP\Defaults;
-use OCP\IL10N;
-use OCP\Template;
-use OCP\Share;
-use OCP\IRequest;
+use OCP\AppFramework\Http\Template\SimpleMenuAction;
 use OCP\AppFramework\Http\TemplateResponse;
-use OCP\AppFramework\Http\NotFoundResponse;
-use OCP\IURLGenerator;
-use OCP\IConfig;
-use OCP\ILogger;
-use OCP\IUserManager;
-use OCP\ISession;
-use OCP\IPreview;
-use OCA\Files_Sharing\Activity\Providers\Downloads;
-use OCP\Files\NotFoundException;
+use OCP\Defaults;
+use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
+use OCP\Files\NotFoundException;
+use OCP\IConfig;
+use OCP\IL10N;
+use OCP\ILogger;
+use OCP\IPreview;
+use OCP\IRequest;
+use OCP\ISession;
+use OCP\IURLGenerator;
+use OCP\IUserManager;
+use OCP\Share;
 use OCP\Share\Exceptions\ShareNotFound;
+use OCP\Share\IManager as ShareManager;
+use OCP\Template;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\EventDispatcher\GenericEvent;
-use OCP\Share\IManager as ShareManager;
 
 /**
  * Class ShareController
@@ -266,6 +273,18 @@ class ShareController extends AuthPublicShareController {
 	 * @return bool
 	 */
 	private function validateShare(\OCP\Share\IShare $share) {
+		// If the owner is disabled no access to the linke is granted
+		$owner = $this->userManager->get($share->getShareOwner());
+		if ($owner === null || !$owner->isEnabled()) {
+			return false;
+		}
+
+		// If the initiator of the share is disabled no access is granted
+		$initiator = $this->userManager->get($share->getSharedBy());
+		if ($initiator === null || !$initiator->isEnabled()) {
+			return false;
+		}
+
 		return $share->getNode()->isReadable() && $share->getNode()->isShareable();
 	}
 
@@ -353,6 +372,7 @@ class ShareController extends AuthPublicShareController {
 			$maxUploadFilesize = $freeSpace;
 
 			$folder = new Template('files', 'list', '');
+
 			$folder->assign('dir', $shareNode->getRelativePath($folderNode->getPath()));
 			$folder->assign('dirToken', $this->getToken());
 			$folder->assign('permissions', \OCP\Constants::PERMISSION_READ);
@@ -435,6 +455,11 @@ class ShareController extends AuthPublicShareController {
 			\OCP\Util::addScript('files', 'filelist');
 			\OCP\Util::addScript('files', 'keyboardshortcuts');
 			\OCP\Util::addScript('files', 'operationprogressbar');
+
+			// Load Viewer scripts
+			if (class_exists(LoadViewer::class)) {
+				$this->eventDispatcher->dispatch(LoadViewer::class, new LoadViewer());
+			}
 		}
 
 		// OpenGraph Support: http://ogp.me/
@@ -524,7 +549,6 @@ class ShareController extends AuthPublicShareController {
 			}
 		}
 
-
 		if (!$this->validateShare($share)) {
 			throw new NotFoundException();
 		}
@@ -558,11 +582,17 @@ class ShareController extends AuthPublicShareController {
 			if ($node instanceof \OCP\Files\File) {
 				// Single file download
 				$this->singleFileDownloaded($share, $share->getNode());
-			} else if (!empty($files_list)) {
-				$this->fileListDownloaded($share, $files_list, $node);
 			} else {
-				// The folder is downloaded
-				$this->singleFileDownloaded($share, $share->getNode());
+				try {
+					if (!empty($files_list)) {
+						$this->fileListDownloaded($share, $files_list, $node);
+					} else {
+						// The folder is downloaded
+						$this->singleFileDownloaded($share, $share->getNode());
+					}
+				} catch (NotFoundException $e) {
+					return new NotFoundResponse();
+				}
 			}
 		}
 
@@ -614,8 +644,13 @@ class ShareController extends AuthPublicShareController {
 	 * @param Share\IShare $share
 	 * @param array $files_list
 	 * @param \OCP\Files\Folder $node
+	 * @throws NotFoundException when trying to download a folder or multiple files of a "hide download" share
 	 */
 	protected function fileListDownloaded(Share\IShare $share, array $files_list, \OCP\Files\Folder $node) {
+		if ($share->getHideDownload() && count($files_list) > 1) {
+			throw new NotFoundException('Downloading more than 1 file');
+		}
+
 		foreach ($files_list as $file) {
 			$subNode = $node->get($file);
 			$this->singleFileDownloaded($share, $subNode);
@@ -627,8 +662,12 @@ class ShareController extends AuthPublicShareController {
 	 * create activity if a single file was downloaded from a link share
 	 *
 	 * @param Share\IShare $share
+	 * @throws NotFoundException when trying to download a folder of a "hide download" share
 	 */
 	protected function singleFileDownloaded(Share\IShare $share, \OCP\Files\Node $node) {
+		if ($share->getHideDownload() && $node instanceof Folder) {
+			throw new NotFoundException('Downloading a folder');
+		}
 
 		$fileId = $node->getId();
 

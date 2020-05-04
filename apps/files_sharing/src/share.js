@@ -21,29 +21,18 @@
 		OCA.Sharing = {}
 	}
 
-	OC.Share = _.extend(OC.Share || {}, {	
-		SHARE_TYPE_USER: 0,	
-		SHARE_TYPE_GROUP: 1,	
-		SHARE_TYPE_LINK: 3,	
-		SHARE_TYPE_EMAIL: 4,	
-		SHARE_TYPE_REMOTE: 6,	
-		SHARE_TYPE_CIRCLE: 7,	
-		SHARE_TYPE_GUEST: 8,	
-		SHARE_TYPE_REMOTE_GROUP: 9,	
-		SHARE_TYPE_ROOM: 10
-	})
-
 	/**
 	 * @namespace
 	 */
 	OCA.Sharing.Util = {
-	
-		/**	
-		 * Regular expression for splitting parts of remote share owners:	
-		 * "user@example.com/path/to/owncloud"	
-		 * "user@anotherexample.com@example.com/path/to/owncloud	
-		 */	
-		_REMOTE_OWNER_REGEXP: new RegExp('^([^@]*)@(([^@]*)@)?([^/]*)([/](.*)?)?$'),
+
+		/**
+		 * Regular expression for splitting parts of remote share owners:
+		 * "user@example.com/"
+		 * "user@example.com/path/to/owncloud"
+		 * "user@anotherexample.com@example.com/path/to/owncloud
+		 */
+		_REMOTE_OWNER_REGEXP: new RegExp('^(([^@]*)@(([^@^/^\\s]*)@)?)([^[\\s/]*)([/](.*))?$'),
 
 		/**
 		 * Initialize the sharing plugin.
@@ -266,7 +255,6 @@
 		 * @returns {boolean} true if the icon was set, false otherwise
 		 */
 		_updateFileActionIcon: function($tr, hasUserShares, hasLinkShares) {
-			console.info('object');
 			// if the statuses are loaded already, use them for the icon
 			// (needed when scrolling to the next page)
 			if (hasUserShares || hasLinkShares || $tr.attr('data-share-recipient-data') || $tr.attr('data-share-owner')) {
@@ -363,26 +351,24 @@
 		*/	
 		_formatRemoteShare: function(shareWith, shareWithDisplayName, message) {	
 			var parts = OCA.Sharing.Util._REMOTE_OWNER_REGEXP.exec(shareWith)	
-			if (!parts) {	
+			if (!parts || !parts[6]) {
 				// display avatar of the user	
 				var avatar = '<span class="avatar" data-username="' + escapeHTML(shareWith) + '" title="' + message + ' ' + escapeHTML(shareWithDisplayName) + '"></span>'	
 				var hidden = '<span class="hidden-visually">' + message + ' ' + escapeHTML(shareWithDisplayName) + '</span> '	
 				return avatar + hidden	
 			}	
 
-			var userName = parts[1]	
-			var userDomain = parts[3]	
-			var server = parts[4]	
-			var tooltip = message + ' ' + userName	
-			if (userDomain) {	
-				tooltip += '@' + userDomain	
-			}	
-			if (server) {	
-				if (!userDomain) {	
-					userDomain = '…'	
-				}	
-				tooltip += '@' + server	
-			}	
+			var userName = parts[2]
+			var userDomain = parts[4]
+			var server = parts[5]
+
+			var tooltip = message + ' ' + userName
+			if (userDomain) {
+				tooltip += '@' + userDomain
+			}
+			if (server) {
+				tooltip += '@' + server
+			}
 
 			var html = '<span class="remoteAddress" title="' + escapeHTML(tooltip) + '">'	
 			html += '<span class="username">' + escapeHTML(userName) + '</span>'	

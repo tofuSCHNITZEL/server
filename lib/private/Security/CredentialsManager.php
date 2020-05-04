@@ -3,6 +3,7 @@
  * @copyright Copyright (c) 2016, ownCloud, Inc.
  *
  * @author Robin McCorkell <robin@mccorkell.me.uk>
+ * @author Roeland Jago Douma <roeland@famdouma.nl>
  *
  * @license AGPL-3.0
  *
@@ -16,15 +17,15 @@
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License, version 3,
- * along with this program.  If not, see <http://www.gnu.org/licenses/>
+ * along with this program. If not, see <http://www.gnu.org/licenses/>
  *
  */
 
 namespace OC\Security;
 
-use OCP\Security\ICrypto;
 use OCP\IDBConnection;
 use OCP\Security\ICredentialsManager;
+use OCP\Security\ICrypto;
 
 /**
  * Store and retrieve credentials for external services
@@ -53,7 +54,7 @@ class CredentialsManager implements ICredentialsManager {
 	/**
 	 * Store a set of credentials
 	 *
-	 * @param string|null $userId Null for system-wide credentials
+	 * @param string $userId empty string for system-wide credentials
 	 * @param string $identifier
 	 * @param mixed $credentials
 	 */
@@ -61,7 +62,7 @@ class CredentialsManager implements ICredentialsManager {
 		$value = $this->crypto->encrypt(json_encode($credentials));
 
 		$this->dbConnection->setValues(self::DB_TABLE, [
-			'user' => $userId,
+			'user' => (string)$userId,
 			'identifier' => $identifier,
 		], [
 			'credentials' => $value,
@@ -71,7 +72,7 @@ class CredentialsManager implements ICredentialsManager {
 	/**
 	 * Retrieve a set of credentials
 	 *
-	 * @param string|null $userId Null for system-wide credentials
+	 * @param string $userId empty string for system-wide credentials
 	 * @param string $identifier
 	 * @return mixed
 	 */
@@ -79,7 +80,7 @@ class CredentialsManager implements ICredentialsManager {
 		$qb = $this->dbConnection->getQueryBuilder();
 		$qb->select('credentials')
 			->from(self::DB_TABLE)
-			->where($qb->expr()->eq('user', $qb->createNamedParameter($userId)))
+			->where($qb->expr()->eq('user', $qb->createNamedParameter((string)$userId)))
 			->andWhere($qb->expr()->eq('identifier', $qb->createNamedParameter($identifier)))
 		;
 		$result = $qb->execute()->fetch();
@@ -95,14 +96,14 @@ class CredentialsManager implements ICredentialsManager {
 	/**
 	 * Delete a set of credentials
 	 *
-	 * @param string|null $userId Null for system-wide credentials
+	 * @param string $userId empty string for system-wide credentials
 	 * @param string $identifier
 	 * @return int rows removed
 	 */
 	public function delete($userId, $identifier) {
 		$qb = $this->dbConnection->getQueryBuilder();
 		$qb->delete(self::DB_TABLE)
-			->where($qb->expr()->eq('user', $qb->createNamedParameter($userId)))
+			->where($qb->expr()->eq('user', $qb->createNamedParameter((string)$userId)))
 			->andWhere($qb->expr()->eq('identifier', $qb->createNamedParameter($identifier)))
 		;
 		return $qb->execute();

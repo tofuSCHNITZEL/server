@@ -17,7 +17,7 @@
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  */
 declare(strict_types=1);
@@ -156,14 +156,19 @@ abstract class AuthPublicShareController extends PublicShareController {
 		);
 	}
 
+
 	/**
 	 * @since 14.0.0
 	 */
 	private function getRoute(string $function): string {
 		$app = strtolower($this->appName);
-		$class = strtolower((new \ReflectionClass($this))->getShortName());
-
-		return $app . '.' . $class . '.' . $function;
+		$class = (new \ReflectionClass($this))->getShortName();
+		if ($this->appName === 'files_sharing') {
+			$class = strtolower($class);
+		} else if (substr($class, -10) === 'Controller') {
+			$class = substr($class, 0, -10);
+		}
+		return $app .'.'. $class .'.'. $function;
 	}
 
 	/**

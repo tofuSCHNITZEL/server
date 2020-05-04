@@ -20,17 +20,17 @@
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License, version 3,
- * along with this program.  If not, see <http://www.gnu.org/licenses/>
+ * along with this program. If not, see <http://www.gnu.org/licenses/>
  *
  */
 
 namespace OCA\Files_Sharing\Controller;
 
 use OCP\AppFramework\Controller;
-use OCP\IRequest;
+use OCP\AppFramework\Http\DataResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\Http\Client\IClientService;
-use OCP\AppFramework\Http\DataResponse;
+use OCP\IRequest;
 
 /**
  * Class ExternalSharesController
@@ -130,6 +130,10 @@ class ExternalSharesController extends Controller {
 	 * @return DataResponse
 	 */
 	public function testRemote($remote) {
+		if (strpos($remote, '#') !== false || strpos($remote, '?') !== false) {
+			return new DataResponse(false);
+		}
+
 		if (
 			$this->testUrl('https://' . $remote . '/ocs-provider/') ||
 			$this->testUrl('https://' . $remote . '/ocs-provider/index.php') ||

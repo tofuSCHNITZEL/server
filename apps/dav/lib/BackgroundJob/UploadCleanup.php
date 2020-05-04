@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * @copyright Copyright (c) 2018, Roeland Jago Douma <roeland@famdouma.nl>
  *
@@ -18,12 +20,13 @@ declare(strict_types=1);
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  */
 
 namespace OCA\DAV\BackgroundJob;
 
+use OC\User\NoUserException;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\IJobList;
 use OCP\BackgroundJob\TimedJob;
@@ -53,15 +56,14 @@ class UploadCleanup extends TimedJob {
 		$uid = $argument['uid'];
 		$folder = $argument['folder'];
 
-		$userFolder = $this->rootFolder->getUserFolder($uid);
-		$userRoot = $userFolder->getParent();
-
 		try {
+			$userFolder = $this->rootFolder->getUserFolder($uid);
+			$userRoot = $userFolder->getParent();
 			/** @var Folder $uploads */
 			$uploads = $userRoot->get('uploads');
 			/** @var Folder $uploadFolder */
 			$uploadFolder = $uploads->get($folder);
-		} catch (NotFoundException $e) {
+		} catch (NotFoundException|NoUserException $e) {
 			$this->jobList->remove(self::class, $argument);
 			return;
 		}
