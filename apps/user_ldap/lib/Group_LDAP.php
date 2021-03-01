@@ -295,7 +295,7 @@ class Group_LDAP extends BackendUtility implements GroupInterface, IGroupLDAP, I
 				$this->access->getFilterPartForGroupSearch($dnGroup)
 			]);
 			$ldap_groups = $this->access->fetchListOfGroups($filter, ['dn'], 1);
-			if (count($ldap_groups) == 1) {
+			if (count($ldap_groups) === 1) {
 				$dnGroup=$ldap_groups[0];
 			}
 		}
